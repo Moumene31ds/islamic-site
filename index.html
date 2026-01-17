@@ -2,352 +2,453 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الميقات العالمي | World Class Islamic Hub</title>
-    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <title>الميقات | تطبيق الهاتف</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
     <style>
+        /* تعريف المتغيرات للألوان (نهاري / ليلي) */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --text-color: #ffffff;
-            --gold: #FFD700;
-            --accent: #00E5FF;
+            /* الوضع الليلي (الافتراضي) */
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-primary: #ffffff;
+            --text-secondary: #94a3b8;
+            --accent-color: #ffd700; /* ذهبي */
+            --accent-glow: rgba(255, 215, 0, 0.4);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --icon-bg: rgba(255, 255, 255, 0.1);
+        }
+
+        /* الوضع النهاري */
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --text-primary: #102a43;
+            --text-secondary: #486581;
+            --accent-color: #d4af37; /* ذهبي داكن للقراءة */
+            --accent-glow: rgba(212, 175, 55, 0.2);
+            --border-color: rgba(0, 0, 0, 0.05);
+            --icon-bg: rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-tap-highlight-color: transparent; /* إزالة لون النقر في الموبايل */
+            user-select: none; /* منع تحديد النصوص */
         }
 
         body {
-            margin: 0;
-            height: 100vh;
-            overflow: hidden;
-            font-family: 'Tajawal', sans-serif;
-            color: var(--text-color);
-            background: #000;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+            padding-bottom: 40px; /* مسافة لأسفل الهاتف */
+        }
+
+        /* حاوية التطبيق تراعي النوتش */
+        .app-container {
+            padding: 20px;
+            padding-top: max(20px, env(safe-area-inset-top)); /* آيفون نوتش */
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* الشريط العلوي */
+        .header {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            margin-bottom: 25px;
         }
 
-        /* خلفية الأورورا المتحركة (Aurora Effect) */
-        .aurora-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(45deg, #0b1026, #2b1055, #7597de);
-            background-size: 400% 400%;
-            animation: gradientAnim 15s ease infinite;
-            z-index: -2;
-        }
-
-        /* طبقة ضبابية فوق الخلفية */
-        .aurora-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0), rgba(0,0,0,0.6));
-            z-index: -1;
-        }
-
-        @keyframes gradientAnim {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* الكارد الرئيسي الزجاجي ثلاثي الأبعاد */
-        .glass-panel {
-            width: 900px;
-            max-width: 95%;
-            min-height: 500px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(25px) saturate(180%);
-            -webkit-backdrop-filter: blur(25px) saturate(180%);
-            border: 1px solid var(--glass-border);
-            border-radius: 30px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 40px;
-            transform-style: preserve-3d;
-            transform: perspective(1000px);
-        }
-
-        /* القسم الأيمن: العداد والحدث الرئيسي */
-        .main-section {
+        .app-title {
+            font-size: 1.5rem;
+            font-weight: 800;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
-            transform: translateZ(50px); /* تأثير العمق */
+            align-items: center;
+            gap: 10px;
         }
+        .app-title i { color: var(--accent-color); }
 
-        .header-badge {
-            background: rgba(255, 215, 0, 0.15);
-            color: var(--gold);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            width: fit-content;
+        .header-actions { display: flex; gap: 10px; }
+
+        .btn-icon {
+            width: 40px; height: 40px;
+            border-radius: 50%;
+            background: var(--icon-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-icon:active { transform: scale(0.9); }
+
+        /* البطاقات */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 20px;
             margin-bottom: 20px;
-            border: 1px solid var(--gold);
-        }
-
-        h1 {
-            font-size: 3rem;
-            margin: 0;
-            background: linear-gradient(to right, #fff, #a5a5a5);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1.2;
-        }
-
-        .event-sub {
-            font-size: 1.2rem;
-            color: var(--accent);
-            margin-bottom: 30px;
-        }
-
-        .timer-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-        }
-
-        .timer-box {
-            background: rgba(0,0,0,0.3);
-            border-radius: 15px;
-            padding: 15px 10px;
-            text-align: center;
-            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             transition: 0.3s;
         }
 
-        .timer-box:hover {
-            transform: translateY(-5px);
-            border-color: var(--accent);
+        /* التاريخ */
+        .date-display {
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .hijri-text {
+            font-family: 'Amiri', serif;
+            font-size: 1.4rem;
+            color: var(--accent-color);
+        }
+
+        /* العداد */
+        .event-title {
+            text-align: center;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 15px;
+        }
+        
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        .timer-box {
+            background: var(--icon-bg);
+            border-radius: 16px;
+            padding: 10px 5px;
+            text-align: center;
+            border: 1px solid var(--border-color);
         }
 
         .timer-num {
-            font-size: 2.2rem;
-            font-weight: 800;
+            font-size: 1.8rem;
+            font-weight: 700;
             display: block;
+            line-height: 1.2;
         }
+        .timer-lbl { font-size: 0.75rem; color: var(--text-secondary); }
 
-        .timer-label {
-            font-size: 0.8rem;
-            opacity: 0.7;
-        }
-
-        /* القسم الأيسر: مواقيت الصلاة والأحداث */
-        .side-section {
-            border-right: 1px solid rgba(255,255,255,0.1);
-            padding-right: 30px;
+        /* الصلاة */
+        .prayer-strip {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
-            transform: translateZ(30px);
+            overflow-x: auto;
+            gap: 12px;
+            padding-bottom: 10px;
+            scrollbar-width: none; /* إخفاء شريط التمرير */
+        }
+        .prayer-strip::-webkit-scrollbar { display: none; }
+
+        .prayer-pill {
+            min-width: 85px;
+            background: var(--icon-bg);
+            border-radius: 16px;
+            padding: 12px 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+            transition: 0.3s;
         }
 
-        .prayer-card {
-            background: rgba(255,255,255,0.03);
-            border-radius: 15px;
-            padding: 20px;
-        }
-
-        .prayer-title {
-            font-family: 'Amiri', serif;
-            font-size: 1.3rem;
-            color: var(--gold);
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .prayer-list {
-            list-style: none;
-            padding: 0;
-        }
-
-        .prayer-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            font-size: 0.95rem;
-        }
-
-        .prayer-item.active {
-            color: var(--accent);
+        .prayer-pill.active {
+            background: var(--accent-color);
+            color: #0f172a; /* نص داكن دائماً عند التفعيل */
+            box-shadow: 0 0 15px var(--accent-glow);
+            transform: scale(1.05);
             font-weight: bold;
         }
+        
+        .p-name { font-size: 0.85rem; margin-bottom: 5px; opacity: 0.9; }
+        .p-time { font-family: 'Amiri'; font-size: 1.1rem; font-weight: bold; }
 
-        .location-info {
-            font-size: 0.8rem;
-            opacity: 0.6;
-            text-align: left;
-            margin-top: auto;
+        /* المسبحة */
+        .tasbih-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+        
+        .tasbih-btn {
+            width: 140px; height: 140px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--icon-bg), transparent);
+            border: 3px solid var(--accent-color);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            box-shadow: 0 0 20px var(--accent-glow);
+            transition: 0.1s;
+            cursor: pointer;
+            user-select: none;
+        }
+        .tasbih-btn:active { transform: scale(0.92); background: var(--accent-glow); }
+
+        .reset-btn {
+            position: absolute;
+            top: 0; right: 0;
+            background: none; border: none;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            padding: 10px;
         }
 
-        /* استجابة الشاشة */
-        @media (max-width: 900px) {
-            .glass-panel {
-                grid-template-columns: 1fr;
-                height: auto;
-                padding: 30px;
-            }
-            .side-section {
-                border-right: none;
-                border-top: 1px solid rgba(255,255,255,0.1);
-                padding-right: 0;
-                padding-top: 20px;
-            }
+        /* الجسيمات (خفيفة جداً) */
+        #particles-js {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: 0.4;
         }
     </style>
 </head>
 <body>
 
-    <div class="aurora-bg"></div>
-    <div class="aurora-overlay"></div>
+    <div id="particles-js"></div>
 
-    <div class="glass-panel" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+    <div class="app-container animate__animated animate__fadeIn">
         
-        <div class="main-section">
-            <div class="header-badge"><i class="fas fa-moon"></i> الميقات الإسلامي</div>
-            <h1 id="main-event-name">تحميل الحدث...</h1>
-            <p class="event-sub" id="hijri-date">التاريخ الهجري اليوم</p>
+        <header class="header">
+            <div class="app-title">
+                <i class="fas fa-kaaba"></i> الميقات
+            </div>
+            <div class="header-actions">
+                <button class="btn-icon" onclick="toggleTheme()" id="themeBtn"><i class="fas fa-moon"></i></button>
+                <button class="btn-icon" onclick="toggleAudio()"><i class="fas fa-volume-mute" id="audioIcon"></i></button>
+            </div>
+        </header>
 
+        <div class="card">
+            <div class="date-display">
+                <div class="hijri-text" id="hijriDisplay">...</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary);" id="locationText">
+                    <i class="fas fa-location-dot"></i> تحديد الموقع...
+                </div>
+            </div>
+            
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 15px 0;">
+
+            <div class="event-title" id="nextEventName">رمضان المبارك</div>
             <div class="timer-grid">
-                <div class="timer-box">
-                    <span class="timer-num" id="days">00</span>
-                    <span class="timer-label">يوم</span>
-                </div>
-                <div class="timer-box">
-                    <span class="timer-num" id="hours">00</span>
-                    <span class="timer-label">ساعة</span>
-                </div>
-                <div class="timer-box">
-                    <span class="timer-num" id="minutes">00</span>
-                    <span class="timer-label">دقيقة</span>
-                </div>
-                <div class="timer-box">
-                    <span class="timer-num" id="seconds">00</span>
-                    <span class="timer-label">ثانية</span>
-                </div>
+                <div class="timer-box"><span class="timer-num" id="days">0</span><span class="timer-lbl">يوم</span></div>
+                <div class="timer-box"><span class="timer-num" id="hours">0</span><span class="timer-lbl">ساعة</span></div>
+                <div class="timer-box"><span class="timer-num" id="minutes">0</span><span class="timer-lbl">دقيقة</span></div>
+                <div class="timer-box"><span class="timer-num" id="seconds">0</span><span class="timer-lbl">ثانية</span></div>
             </div>
         </div>
 
-        <div class="side-section">
-            <div class="prayer-card">
-                <div class="prayer-title">
-                    مواقيت الصلاة اليوم
-                    <i class="fas fa-mosque"></i>
-                </div>
-                <ul class="prayer-list" id="prayer-list-dom">
-                    <li class="prayer-item">جاري تحديد الموقع...</li>
-                </ul>
+        <div style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; padding: 0 5px;">
+            <h3 style="font-size: 1rem;">مواقيت الصلاة</h3>
+            <button onclick="requestLocation()" style="background:none; border:none; color: var(--accent-color); font-size: 0.8rem;">تحديث <i class="fas fa-sync"></i></button>
+        </div>
+        
+        <div class="prayer-strip" id="prayerStrip">
             </div>
-            
-            <div class="location-info">
-                <i class="fas fa-map-marker-alt"></i> <span id="user-location">غير محدد</span>
+
+        <div class="card" style="margin-top: 20px;">
+            <div class="tasbih-wrapper">
+                <button class="reset-btn" onclick="resetTasbih()"><i class="fas fa-rotate-right"></i></button>
+                <h3 style="margin-bottom: 20px; font-size: 1rem;">المسبحة</h3>
+                <div class="tasbih-btn" id="tasbihCounter" onclick="incrementTasbih()">0</div>
+                <div style="margin-top: 15px; font-size: 0.9rem; font-style: italic; text-align: center; color: var(--text-secondary);" id="quoteText">...</div>
             </div>
         </div>
 
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+    <audio id="quranAudio" loop>
+        <source src="https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3" type="audio/mpeg">
+    </audio>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.0/Adhan.min.js"></script>
 
     <script>
-        // 1. الثوابت والبيانات
-        const events = [
-            { name: "شهر رمضان المبارك", date: "2026-02-18T00:00:00" },
-            { name: "عيد الفطر السعيد", date: "2026-03-20T00:00:00" },
-            { name: "يوم عرفة", date: "2026-05-27T00:00:00" },
-            { name: "عيد الأضحى المبارك", date: "2026-05-28T00:00:00" },
-            { name: "رأس السنة الهجرية", date: "2026-06-17T00:00:00" }
-        ];
+        // 1. إدارة الثيم (الوضع الليلي/النهاري)
+        const themeBtn = document.getElementById('themeBtn');
+        let currentTheme = localStorage.getItem('theme') || 'dark';
 
-        // 2. تحديث التاريخ الهجري
-        function updateHijri() {
-            const date = new Date();
-            const options = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
-            document.getElementById('hijri-date').innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', options).format(date);
-        }
-
-        // 3. منطق العداد التنازلي
-        function initCountdown() {
-            const now = new Date().getTime();
-            // إيجاد أقرب حدث
-            let nextEvent = events.find(e => new Date(e.date).getTime() > now) || events[0];
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
             
-            document.getElementById('main-event-name').innerText = nextEvent.name;
-
-            setInterval(() => {
-                const currentTime = new Date().getTime();
-                const targetTime = new Date(nextEvent.date).getTime();
-                const dist = targetTime - currentTime;
-
-                const d = Math.floor(dist / (1000 * 60 * 60 * 24));
-                const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
-                const s = Math.floor((dist % (1000 * 60)) / 1000);
-
-                document.getElementById('days').innerText = d;
-                document.getElementById('hours').innerText = h < 10 ? '0'+h : h;
-                document.getElementById('minutes').innerText = m < 10 ? '0'+m : m;
-                document.getElementById('seconds').innerText = s < 10 ? '0'+s : s;
-            }, 1000);
-        }
-
-        // 4. جلب مواقيت الصلاة (API Integration)
-        function getPrayerTimes() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(position => {
-                    const lat = position.coords.latitude;
-                    const long = position.coords.longitude;
-                    
-                    document.getElementById('user-location').innerText = `Lat: ${lat.toFixed(2)}, Long: ${long.toFixed(2)}`;
-
-                    // استخدام Aladhan API
-                    fetch(`https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${lat}&longitude=${long}&method=4`)
-                        .then(response => response.json())
-                        .then(data => {
-                            const timings = data.data.timings;
-                            const prayersToShow = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
-                            const arabicNames = {'Fajr': 'الفجر', 'Dhuhr': 'الظهر', 'Asr': 'العصر', 'Maghrib': 'المغرب', 'Isha': 'العشاء'};
-                            
-                            let html = '';
-                            prayersToShow.forEach(p => {
-                                html += `<li class="prayer-item">
-                                            <span>${arabicNames[p]}</span>
-                                            <span>${timings[p]}</span>
-                                         </li>`;
-                            });
-                            document.getElementById('prayer-list-dom').innerHTML = html;
-                        })
-                        .catch(err => console.error("Error fetching prayers", err));
-                }, () => {
-                    document.getElementById('prayer-list-dom').innerHTML = '<li class="prayer-item">يجب تفعيل الموقع لعرض الصلاة</li>';
-                });
+            // تغيير أيقونة الزر ولون الجسيمات
+            if (theme === 'light') {
+                themeBtn.innerHTML = '<i class="fas fa-sun"></i>';
+                updateParticles('#102a43'); // جسيمات داكنة للخلفية الفاتحة
             } else {
-                document.getElementById('prayer-list-dom').innerHTML = '<li class="prayer-item">المتصفح لا يدعم تحديد الموقع</li>';
+                themeBtn.innerHTML = '<i class="fas fa-moon"></i>';
+                updateParticles('#ffffff'); // جسيمات بيضاء للخلفية الداكنة
             }
         }
 
-        // تشغيل الوظائف
-        updateHijri();
-        initCountdown();
-        getPrayerTimes();
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(currentTheme);
+        }
 
-        // تفعيل Vanilla Tilt يدوياً (اختياري، المكتبة تعمل تلقائياً عبر data-tilt)
-        VanillaTilt.init(document.querySelector(".glass-panel"), {
-            max: 5,
-            speed: 400,
-            glare: true,
-            "max-glare": 0.1,
-        });
+        // تطبيق الثيم عند التحميل
+        applyTheme(currentTheme);
 
+        // 2. الجسيمات (Particles)
+        function updateParticles(colorHex) {
+            // التحقق مما إذا كانت المكتبة محملة لتجنب الأخطاء
+            if(window.pJSDom && window.pJSDom.length > 0) {
+                window.pJSDom[0].pJS.particles.color.value = colorHex;
+                window.pJSDom[0].pJS.fn.particlesRefresh();
+            } else {
+                particlesJS("particles-js", {
+                    "particles": {
+                        "number": { "value": 30 },
+                        "color": { "value": colorHex },
+                        "opacity": { "value": 0.3 },
+                        "size": { "value": 3 },
+                        "move": { "enable": true, "speed": 1 }
+                    },
+                    "interactivity": { "events": { "onhover": { "enable": false } } } // تعطيل التفاعل باللمس للحفاظ على الأداء
+                });
+            }
+        }
+
+        // 3. البيانات والوقت
+        const events = [
+            { name: "رمضان المبارك", date: new Date("February 18, 2026 00:00:00").getTime() },
+            { name: "عيد الفطر", date: new Date("March 20, 2026 00:00:00").getTime() }
+        ];
+
+        function initData() {
+            // التاريخ الهجري
+            const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', calendar: 'islamic-umalqura' };
+            document.getElementById('hijriDisplay').innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', options).format(new Date());
+
+            // العداد
+            const now = new Date().getTime();
+            const nextEvent = events.filter(e => e.date > now)[0] || events[0];
+            document.getElementById('nextEventName').innerText = `المتبقي لـ ${nextEvent.name}`;
+
+            setInterval(() => {
+                const current = new Date().getTime();
+                const dist = nextEvent.date - current;
+                if(dist < 0) return;
+                
+                document.getElementById("days").innerText = Math.floor(dist / (1000 * 60 * 60 * 24));
+                document.getElementById("hours").innerText = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                document.getElementById("minutes").innerText = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                document.getElementById("seconds").innerText = Math.floor((dist % (1000 * 60)) / 1000);
+            }, 1000);
+        }
+        initData();
+
+        // 4. مواقيت الصلاة
+        let coords = null;
+        
+        function requestLocation() {
+            document.getElementById('locationText').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
+            if(navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(pos => {
+                    coords = new adhan.Coordinates(pos.coords.latitude, pos.coords.longitude);
+                    updatePrayerUI();
+                    document.getElementById('locationText').innerHTML = '<i class="fas fa-map-marker-alt"></i> تم تحديد موقعك بدقة';
+                }, () => {
+                    coords = new adhan.Coordinates(21.4225, 39.8262); // مكة
+                    updatePrayerUI();
+                    document.getElementById('locationText').innerHTML = '<i class="fas fa-kaaba"></i> بتوقيت مكة (تعذر الموقع)';
+                });
+            }
+        }
+
+        function updatePrayerUI() {
+            if(!coords) return;
+            const date = new Date();
+            const params = adhan.CalculationMethod.MuslimWorldLeague();
+            params.madhab = adhan.Madhab.Shafi;
+            const times = new adhan.PrayerTimes(coords, date, params);
+            
+            const prayerList = [
+                { name: 'الفجر', time: times.fajr },
+                { name: 'الظهر', time: times.dhuhr },
+                { name: 'العصر', time: times.asr },
+                { name: 'المغرب', time: times.maghrib },
+                { name: 'العشاء', time: times.isha }
+            ];
+
+            const container = document.getElementById('prayerStrip');
+            container.innerHTML = '';
+            
+            let nextFound = false;
+
+            prayerList.forEach(p => {
+                const pTime = p.time;
+                const isNext = !nextFound && pTime > new Date();
+                if(isNext) nextFound = true;
+
+                const el = document.createElement('div');
+                el.className = `prayer-pill ${isNext ? 'active' : ''}`;
+                el.innerHTML = `
+                    <div class="p-name">${p.name}</div>
+                    <div class="p-time">${pTime.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12:false})}</div>
+                `;
+                container.appendChild(el);
+                
+                // التمرير التلقائي للصلاة القادمة
+                if(isNext) {
+                    setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }), 500);
+                }
+            });
+        }
+        requestLocation();
+
+        // 5. المسبحة
+        let tCount = parseInt(localStorage.getItem('tasbihCount')) || 0;
+        document.getElementById('tasbihCounter').innerText = tCount;
+
+        function incrementTasbih() {
+            tCount++;
+            document.getElementById('tasbihCounter').innerText = tCount;
+            localStorage.setItem('tasbihCount', tCount);
+            if(navigator.vibrate) navigator.vibrate(20);
+        }
+
+        function resetTasbih() {
+            if(confirm('تصفير العداد؟')) {
+                tCount = 0;
+                document.getElementById('tasbihCounter').innerText = 0;
+                localStorage.setItem('tasbihCount', 0);
+            }
+        }
+
+        // 6. الصوت والاقتباسات
+        const quotes = ["سبحان الله", "الحمد لله", "لا إله إلا الله", "الله أكبر", "أستغفر الله"];
+        document.getElementById('quoteText').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+
+        const audio = document.getElementById("quranAudio");
+        let isPlaying = false;
+        function toggleAudio() {
+            if(isPlaying) { audio.pause(); document.getElementById('audioIcon').className = "fas fa-volume-mute"; } 
+            else { audio.play(); document.getElementById('audioIcon').className = "fas fa-volume-up"; }
+            isPlaying = !isPlaying;
+        }
     </script>
 </body>
 </html>
