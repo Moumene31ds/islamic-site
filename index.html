@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الميقات العالمي | World Class Islamic Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;500;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --text-color: #ffffff;
+            --gold: #FFD700;
+            --accent: #00E5FF;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Tajawal', sans-serif;
+            color: var(--text-color);
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* خلفية الأورورا المتحركة (Aurora Effect) */
+        .aurora-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #0b1026, #2b1055, #7597de);
+            background-size: 400% 400%;
+            animation: gradientAnim 15s ease infinite;
+            z-index: -2;
+        }
+
+        /* طبقة ضبابية فوق الخلفية */
+        .aurora-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(0,0,0,0), rgba(0,0,0,0.6));
+            z-index: -1;
+        }
+
+        @keyframes gradientAnim {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* الكارد الرئيسي الزجاجي ثلاثي الأبعاد */
+        .glass-panel {
+            width: 900px;
+            max-width: 95%;
+            min-height: 500px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 40px;
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+        }
+
+        /* القسم الأيمن: العداد والحدث الرئيسي */
+        .main-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transform: translateZ(50px); /* تأثير العمق */
+        }
+
+        .header-badge {
+            background: rgba(255, 215, 0, 0.15);
+            color: var(--gold);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            width: fit-content;
+            margin-bottom: 20px;
+            border: 1px solid var(--gold);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(to right, #fff, #a5a5a5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.2;
+        }
+
+        .event-sub {
+            font-size: 1.2rem;
+            color: var(--accent);
+            margin-bottom: 30px;
+        }
+
+        .timer-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+
+        .timer-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+
+        .timer-box:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent);
+        }
+
+        .timer-num {
+            font-size: 2.2rem;
+            font-weight: 800;
+            display: block;
+        }
+
+        .timer-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* القسم الأيسر: مواقيت الصلاة والأحداث */
+        .side-section {
+            border-right: 1px solid rgba(255,255,255,0.1);
+            padding-right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transform: translateZ(30px);
+        }
+
+        .prayer-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 20px;
+        }
+
+        .prayer-title {
+            font-family: 'Amiri', serif;
+            font-size: 1.3rem;
+            color: var(--gold);
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prayer-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .prayer-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.95rem;
+        }
+
+        .prayer-item.active {
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        .location-info {
+            font-size: 0.8rem;
+            opacity: 0.6;
+            text-align: left;
+            margin-top: auto;
+        }
+
+        /* استجابة الشاشة */
+        @media (max-width: 900px) {
+            .glass-panel {
+                grid-template-columns: 1fr;
+                height: auto;
+                padding: 30px;
+            }
+            .side-section {
+                border-right: none;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                padding-right: 0;
+                padding-top: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="aurora-bg"></div>
+    <div class="aurora-overlay"></div>
+
+    <div class="glass-panel" data-tilt data-tilt-max="5" data-tilt-speed="400" data-tilt-glare data-tilt-max-glare="0.2">
+        
+        <div class="main-section">
+            <div class="header-badge"><i class="fas fa-moon"></i> الميقات الإسلامي</div>
+            <h1 id="main-event-name">تحميل الحدث...</h1>
+            <p class="event-sub" id="hijri-date">التاريخ الهجري اليوم</p>
+
+            <div class="timer-grid">
+                <div class="timer-box">
+                    <span class="timer-num" id="days">00</span>
+                    <span class="timer-label">يوم</span>
+                </div>
+                <div class="timer-box">
+                    <span class="timer-num" id="hours">00</span>
+                    <span class="timer-label">ساعة</span>
+                </div>
+                <div class="timer-box">
+                    <span class="timer-num" id="minutes">00</span>
+                    <span class="timer-label">دقيقة</span>
+                </div>
+                <div class="timer-box">
+                    <span class="timer-num" id="seconds">00</span>
+                    <span class="timer-label">ثانية</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="side-section">
+            <div class="prayer-card">
+                <div class="prayer-title">
+                    مواقيت الصلاة اليوم
+                    <i class="fas fa-mosque"></i>
+                </div>
+                <ul class="prayer-list" id="prayer-list-dom">
+                    <li class="prayer-item">جاري تحديد الموقع...</li>
+                </ul>
+            </div>
+            
+            <div class="location-info">
+                <i class="fas fa-map-marker-alt"></i> <span id="user-location">غير محدد</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+
+    <script>
+        // 1. الثوابت والبيانات
+        const events = [
+            { name: "شهر رمضان المبارك", date: "2026-02-18T00:00:00" },
+            { name: "عيد الفطر السعيد", date: "2026-03-20T00:00:00" },
+            { name: "يوم عرفة", date: "2026-05-27T00:00:00" },
+            { name: "عيد الأضحى المبارك", date: "2026-05-28T00:00:00" },
+            { name: "رأس السنة الهجرية", date: "2026-06-17T00:00:00" }
+        ];
+
+        // 2. تحديث التاريخ الهجري
+        function updateHijri() {
+            const date = new Date();
+            const options = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
+            document.getElementById('hijri-date').innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', options).format(date);
+        }
+
+        // 3. منطق العداد التنازلي
+        function initCountdown() {
+            const now = new Date().getTime();
+            // إيجاد أقرب حدث
+            let nextEvent = events.find(e => new Date(e.date).getTime() > now) || events[0];
+            
+            document.getElementById('main-event-name').innerText = nextEvent.name;
+
+            setInterval(() => {
+                const currentTime = new Date().getTime();
+                const targetTime = new Date(nextEvent.date).getTime();
+                const dist = targetTime - currentTime;
+
+                const d = Math.floor(dist / (1000 * 60 * 60 * 24));
+                const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                const s = Math.floor((dist % (1000 * 60)) / 1000);
+
+                document.getElementById('days').innerText = d;
+                document.getElementById('hours').innerText = h < 10 ? '0'+h : h;
+                document.getElementById('minutes').innerText = m < 10 ? '0'+m : m;
+                document.getElementById('seconds').innerText = s < 10 ? '0'+s : s;
+            }, 1000);
+        }
+
+        // 4. جلب مواقيت الصلاة (API Integration)
+        function getPrayerTimes() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(position => {
+                    const lat = position.coords.latitude;
+                    const long = position.coords.longitude;
+                    
+                    document.getElementById('user-location').innerText = `Lat: ${lat.toFixed(2)}, Long: ${long.toFixed(2)}`;
+
+                    // استخدام Aladhan API
+                    fetch(`https://api.aladhan.com/v1/timings/${Math.floor(Date.now() / 1000)}?latitude=${lat}&longitude=${long}&method=4`)
+                        .then(response => response.json())
+                        .then(data => {
+                            const timings = data.data.timings;
+                            const prayersToShow = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
+                            const arabicNames = {'Fajr': 'الفجر', 'Dhuhr': 'الظهر', 'Asr': 'العصر', 'Maghrib': 'المغرب', 'Isha': 'العشاء'};
+                            
+                            let html = '';
+                            prayersToShow.forEach(p => {
+                                html += `<li class="prayer-item">
+                                            <span>${arabicNames[p]}</span>
+                                            <span>${timings[p]}</span>
+                                         </li>`;
+                            });
+                            document.getElementById('prayer-list-dom').innerHTML = html;
+                        })
+                        .catch(err => console.error("Error fetching prayers", err));
+                }, () => {
+                    document.getElementById('prayer-list-dom').innerHTML = '<li class="prayer-item">يجب تفعيل الموقع لعرض الصلاة</li>';
+                });
+            } else {
+                document.getElementById('prayer-list-dom').innerHTML = '<li class="prayer-item">المتصفح لا يدعم تحديد الموقع</li>';
+            }
+        }
+
+        // تشغيل الوظائف
+        updateHijri();
+        initCountdown();
+        getPrayerTimes();
+
+        // تفعيل Vanilla Tilt يدوياً (اختياري، المكتبة تعمل تلقائياً عبر data-tilt)
+        VanillaTilt.init(document.querySelector(".glass-panel"), {
+            max: 5,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.1,
+        });
+
+    </script>
+</body>
+</html>
