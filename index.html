@@ -228,7 +228,7 @@
         <div class="card">
             <div class="hijri-text" id="hijriDisplay">...</div>
             <div class="location-text" id="locationText">
-                <i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع تلقائياً...
+                <i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع...
             </div>
             
             <div class="timer-box">
@@ -390,42 +390,54 @@
         }
 
         // ==========================================
-        // 3. المواقيت والموقع (تحديث فوري)
+        // 3. المواقيت والموقع (محسن)
         // ==========================================
         let coords = null;
         let timerInterval = null;
         let adhanHasPlayed = false;
 
         async function requestLocation() {
-            // الطريقة 1: محاولة الحصول على الموقع فوراً من الإنترنت (IP Geolocation)
-            // هذا أسرع بكثير من انتظار الـ GPS
+            let locationFound = false;
+            const locText = document.getElementById('locationText');
+
+            // 1. محاولة مبدئية عبر IP (أسرع وتعمل غالباً دون إذن)
             try {
                 const response = await fetch('https://ipapi.co/json/');
                 const data = await response.json();
                 if(data.latitude && data.longitude) {
                     coords = new adhan.Coordinates(data.latitude, data.longitude);
                     updatePrayerUI();
-                    document.getElementById('locationText').innerHTML = `<i class="fas fa-globe"></i> ${data.city || 'موقع تقريبي'} (تلقائي)`;
+                    locText.innerHTML = `<i class="fas fa-globe"></i> ${data.city || 'موقع تقريبي'} (تلقائي)`;
+                    locationFound = true;
                 }
             } catch(e) {
-                console.log("IP Location failed, waiting for GPS...");
+                console.log("IP Location failed or blocked:", e);
             }
 
-            // الطريقة 2: طلب الـ GPS عالي الدقة (سيقوم بتحديث الموقع بدقة أكبر عند توفره)
+            // 2. محاولة دقيقة عبر GPS (إذا سمح المتصفح)
             if(navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
                     coords = new adhan.Coordinates(pos.coords.latitude, pos.coords.longitude);
                     updatePrayerUI();
-                    document.getElementById('locationText').innerHTML = '<i class="fas fa-map-marker-alt" style="color:#10b981"></i> موقع دقيق (GPS)';
+                    locText.innerHTML = '<i class="fas fa-map-marker-alt" style="color:#10b981"></i> موقع دقيق (GPS)';
+                    locationFound = true;
                 }, (err) => {
-                    // إذا فشل الـ GPS ولم نجد موقع سابق من الـ IP، نستخدم مكة
-                    if(!coords) {
-                        coords = new adhan.Coordinates(21.4225, 39.8262);
-                        updatePrayerUI();
-                        document.getElementById('locationText').innerHTML = '<i class="fas fa-kaaba"></i> مكة المكرمة (افتراضي)';
-                    }
+                    console.warn("GPS Access denied or failed:", err);
+                    if(!locationFound) useMakkahFallback();
+                }, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
                 });
+            } else {
+                if(!locationFound) useMakkahFallback();
             }
+        }
+
+        function useMakkahFallback() {
+            coords = new adhan.Coordinates(21.4225, 39.8262);
+            updatePrayerUI();
+            document.getElementById('locationText').innerHTML = '<i class="fas fa-kaaba"></i> مكة المكرمة (افتراضي)';
         }
 
         function updatePrayerUI() {
@@ -512,7 +524,7 @@
         }
 
         // ==========================================
-        // 4. المسبحة والآيات
+        // 4. المسبحة والآيات (محسن)
         // ==========================================
         
         // المسبحة
@@ -534,7 +546,7 @@
         }
         function resetTasbih() { tCount = 0; incrementTasbih(); document.getElementById('tasbihCounter').innerText = 0; }
 
-        // الآيات القرآنية (نظام جديد)
+        // الآيات القرآنية (إصلاح التكرار)
         let ayahAudioUrl = "";
         const bismillahUrl = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
         const player = document.getElementById('quranAudio');
@@ -545,7 +557,7 @@
             // إظهار مؤشر التحميل
             container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i>';
             
-            // إيقاف الصوت القديم إذا كان يعمل
+            // إيقاف الصوت القديم
             if(isPlaying) {
                 player.pause();
                 isPlaying = false;
@@ -553,8 +565,9 @@
             }
 
             try {
-                // جلب آية عشوائية جديدة
-                const res = await fetch('https://api.alquran.cloud/v1/ayah/random/ar.alafasy');
+                // إضافة متغير الوقت لمنع الكاش (Caching)
+                const uniqueUrl = `https://api.alquran.cloud/v1/ayah/random/ar.alafasy?t=${Date.now()}`;
+                const res = await fetch(uniqueUrl);
                 const d = await res.json();
                 
                 if(d.code === 200) {
@@ -566,20 +579,22 @@
                     throw new Error("API Error");
                 }
             } catch(e) { 
-                // في حال عدم وجود إنترنت، نعرض آية محلية
+                // قائمة آيات احتياطية عند انقطاع الاتصال
                 const fallbackAyahs = [
                     {text: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", surah: "الشرح", n: 5},
                     {text: "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ", surah: "البقرة", n: 186},
                     {text: "لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا", surah: "البقرة", n: 286},
-                    {text: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً", surah: "البقرة", n: 201}
+                    {text: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً", surah: "البقرة", n: 201},
+                    {text: "إِنَّ اللَّهَ مَعَ الصَّابِرِينَ", surah: "البقرة", n: 153}
                 ];
+                // اختيار عشوائي للآية الاحتياطية
                 const randomFallback = fallbackAyahs[Math.floor(Math.random() * fallbackAyahs.length)];
                 
                 container.innerHTML = `
                     <div class="adhkar-text animate__animated animate__fadeIn">"${randomFallback.text}"</div>
                     <div style="font-size:0.8rem; color:var(--accent-color);">سورة ${randomFallback.surah}</div>
                     <div style="font-size:0.7rem; color:gray; margin-top:5px;">(وضع غير متصل)</div>`;
-                ayahAudioUrl = ""; // لا يوجد صوت في الوضع المحلي
+                ayahAudioUrl = ""; 
             }
         }
 
