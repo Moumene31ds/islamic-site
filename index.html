@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
-    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/144/kaaba.png">
-    <link rel="shortcut icon" href="https://img.icons8.com/fluency/144/kaaba.png">
-
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0f172a">
-    <meta name="mobile-web-app-capable" content="yes">
     
     <title>الميقات برو | AI Edition</title>
     
@@ -33,10 +26,10 @@
         }
 
         /* --- الأوضاع الديناميكية (الخلفيات) --- */
-        body.fajr-mode { --bg-gradient: linear-gradient(135deg, #1a2980, #26d0ce); } /* أزرق سماوي بارد */
-        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.7); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } /* ذهبي مشمس */
-        body.maghrib-mode { --bg-gradient: linear-gradient(135deg, #2c3e50, #fd746c); } /* غروب */
-        body.night-mode { --bg-gradient: linear-gradient(135deg, #0f172a 0%, #000000 100%); } /* ليلي داكن */
+        body.fajr-mode { --bg-gradient: linear-gradient(135deg, #1a2980, #26d0ce); } 
+        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.7); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
+        body.maghrib-mode { --bg-gradient: linear-gradient(135deg, #2c3e50, #fd746c); } 
+        body.night-mode { --bg-gradient: linear-gradient(135deg, #0f172a 0%, #000000 100%); } 
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         
@@ -188,6 +181,14 @@
         
         /* Loading */
         .spinner { font-size: 2rem; color: var(--accent-color); animation: fa-spin 2s linear infinite; }
+        
+        /* زر الآية الجديدة */
+        .btn-small {
+            background: var(--icon-bg); border: 1px solid var(--border-color);
+            color: var(--text-secondary); padding: 5px 15px; border-radius: 15px;
+            font-size: 0.8rem; cursor: pointer; margin-top: 10px; transition: 0.3s;
+        }
+        .btn-small:hover { background: var(--accent-color); color: #000; }
     </style>
 </head>
 <body class="night-mode">
@@ -227,7 +228,7 @@
         <div class="card">
             <div class="hijri-text" id="hijriDisplay">...</div>
             <div class="location-text" id="locationText">
-                <i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع...
+                <i class="fas fa-spinner fa-spin"></i> جاري تحديد الموقع تلقائياً...
             </div>
             
             <div class="timer-box">
@@ -249,7 +250,10 @@
         </div>
 
         <div class="card" style="margin-top: 10px;">
-            <h3 style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 10px; text-align: center;"><i class="fas fa-book-open"></i> ورد قرآني</h3>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-book-open"></i> ورد قرآني</h3>
+                <button class="btn-small" onclick="fetchAyah()"><i class="fas fa-sync-alt"></i> آية أخرى</button>
+            </div>
             <div id="ayahContainer" style="text-align: center;">
                 <i class="fas fa-circle-notch fa-spin spinner"></i>
             </div>
@@ -281,7 +285,7 @@
 
     <script>
         // ==========================================
-        // 1. نظام الأذكار الذكي (Context Aware)
+        // 1. نظام الأذكار الذكي
         // ==========================================
         const adhkarData = {
             morning: [
@@ -334,14 +338,12 @@
                 tag.innerText = "💤 أذكار النوم";
                 tag.style.background = "#6366f1"; 
             }
-            // عرض أول ذكر
             document.getElementById('adhkarText').innerText = currentAdhkarList[0];
         }
 
         function nextAdhkar() {
             currentAdhkarIndex = (currentAdhkarIndex + 1) % currentAdhkarList.length;
             const textElem = document.getElementById('adhkarText');
-            // تأثير حركة بسيط
             textElem.style.opacity = 0;
             setTimeout(() => {
                 textElem.innerText = currentAdhkarList[currentAdhkarIndex];
@@ -350,13 +352,12 @@
         }
 
         // ==========================================
-        // 2. بوصلة القبلة (باستخدام الحساسات)
+        // 2. بوصلة القبلة
         // ==========================================
         function openQibla() {
             const modal = document.getElementById('qiblaModal');
             modal.style.display = 'flex';
             
-            // طلب الإذن في أجهزة iOS 13+
             if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
                 DeviceOrientationEvent.requestPermission()
                     .then(response => {
@@ -368,7 +369,6 @@
                     })
                     .catch(console.error);
             } else {
-                // أندرويد والأجهزة القديمة
                 window.addEventListener('deviceorientation', handleOrientation);
             }
         }
@@ -380,54 +380,50 @@
 
         function handleOrientation(e) {
             if(!coords) return;
-            
-            // حساب اتجاه القبلة من الشمال الجغرافي
             const qiblaFromNorth = adhan.Qibla(new adhan.Coordinates(coords.latitude, coords.longitude));
-            
-            // اتجاه الهاتف بالنسبة للشمال (alpha)
-            // ملاحظة: alpha في أندرويد عكس عقارب الساعة أحياناً، ويبكيت يختلف. 
-            // هذا كود مبسط يعمل في الغالبية.
             let alpha = e.alpha; 
-            if(e.webkitCompassHeading) alpha = e.webkitCompassHeading; // iOS
-
-            // تدوير قرص البوصلة لكي يشير الشمال للأعلى دائماً
-            // ثم نحرك أيقونة الكعبة لزاويتها الصحيحة
-            
+            if(e.webkitCompassHeading) alpha = e.webkitCompassHeading;
             const ring = document.getElementById('compassRing');
-            // تدوير القرص بحيث يواجه "الشمال" في البوصلة اتجاه الشمال الحقيقي
             ring.style.transform = `rotate(${-alpha}deg)`;
-            
-            // وضع أيقونة الكعبة في مكانها الصحيح داخل القرص
             const kaabaIcon = document.querySelector('.kaaba-icon');
-            // الكعبة ثابتة بالنسبة للقرص، لكن القرص يدور. 
-            // الطريقة الأفضل: ندور القرص بالكامل بناء على الفرق
-            
-            // تصحيح: لنجعل الأمر بسيطاً بصرياً
-            // سندور القرص بحيث يكون الرقم 0 (الشمال) متجهاً للشمال الحقيقي
-            // ونضع الكعبة عند زاوية القبلة
-            
-            // تدوير الأيقونة داخل القرص لتكون عند درجة القبلة
             kaabaIcon.style.transform = `translate(-50%, 0) rotate(${qiblaFromNorth}deg) translate(0, -110px) rotate(${-qiblaFromNorth}deg)`;
         }
 
         // ==========================================
-        // 3. المواقيت، الموقع، والآذان التلقائي
+        // 3. المواقيت والموقع (تحديث فوري)
         // ==========================================
         let coords = null;
         let timerInterval = null;
         let adhanHasPlayed = false;
 
-        function requestLocation() {
+        async function requestLocation() {
+            // الطريقة 1: محاولة الحصول على الموقع فوراً من الإنترنت (IP Geolocation)
+            // هذا أسرع بكثير من انتظار الـ GPS
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                if(data.latitude && data.longitude) {
+                    coords = new adhan.Coordinates(data.latitude, data.longitude);
+                    updatePrayerUI();
+                    document.getElementById('locationText').innerHTML = `<i class="fas fa-globe"></i> ${data.city || 'موقع تقريبي'} (تلقائي)`;
+                }
+            } catch(e) {
+                console.log("IP Location failed, waiting for GPS...");
+            }
+
+            // الطريقة 2: طلب الـ GPS عالي الدقة (سيقوم بتحديث الموقع بدقة أكبر عند توفره)
             if(navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(pos => {
                     coords = new adhan.Coordinates(pos.coords.latitude, pos.coords.longitude);
                     updatePrayerUI();
-                    document.getElementById('locationText').innerHTML = '<i class="fas fa-check-circle" style="color:#10b981"></i> تم تحديد الموقع بدقة';
-                }, () => {
-                    // مكة المكرمة افتراضياً
-                    coords = new adhan.Coordinates(21.4225, 39.8262);
-                    updatePrayerUI();
-                    document.getElementById('locationText').innerHTML = '<i class="fas fa-map-marker-alt"></i> مكة المكرمة (افتراضي)';
+                    document.getElementById('locationText').innerHTML = '<i class="fas fa-map-marker-alt" style="color:#10b981"></i> موقع دقيق (GPS)';
+                }, (err) => {
+                    // إذا فشل الـ GPS ولم نجد موقع سابق من الـ IP، نستخدم مكة
+                    if(!coords) {
+                        coords = new adhan.Coordinates(21.4225, 39.8262);
+                        updatePrayerUI();
+                        document.getElementById('locationText').innerHTML = '<i class="fas fa-kaaba"></i> مكة المكرمة (افتراضي)';
+                    }
                 });
             }
         }
@@ -439,15 +435,13 @@
             params.madhab = adhan.Madhab.Shafi;
             const times = new adhan.PrayerTimes(coords, date, params);
             
-            // 1. تغيير الخلفية (Atmosphere)
             const body = document.body;
-            body.className = ''; // مسح الكلاسات القديمة
+            body.className = ''; 
             if (date < times.sunrise) body.classList.add('fajr-mode');
             else if (date < times.maghrib) body.classList.add('sun-mode');
             else if (date < times.isha) body.classList.add('maghrib-mode');
             else body.classList.add('night-mode');
 
-            // 2. بناء شريط الصلوات
             const pList = [
                 {n:'الفجر', t:times.fajr}, {n:'الشروق', t:times.sunrise}, {n:'الظهر', t:times.dhuhr}, 
                 {n:'العصر', t:times.asr}, {n:'المغرب', t:times.maghrib}, {n:'العشاء', t:times.isha}
@@ -456,18 +450,14 @@
             let html = '';
             let nextP = null;
             let nextPName = "";
-
-            // تحديد الصلاة القادمة
             let foundNext = false;
+
             pList.forEach(p => {
-                if(p.n === 'الشروق') return; // لا نعرض الشروق كصلاة رئيسية
-                
+                if(p.n === 'الشروق') return;
                 const isNext = !foundNext && p.t > new Date();
                 if(isNext) { 
-                    nextP = p.t; 
-                    nextPName = p.n; 
-                    foundNext = true; 
-                    adhanHasPlayed = false; // إعادة تعيين حالة الآذان
+                    nextP = p.t; nextPName = p.n; foundNext = true; 
+                    adhanHasPlayed = false;
                 }
                 
                 html += `
@@ -477,18 +467,14 @@
                 </div>`;
             });
 
-            // إذا انتهت صلوات اليوم، ننتقل للفجر غداً
             if(!nextP) {
                 const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
                 const tTimes = new adhan.PrayerTimes(coords, tomorrow, params);
-                nextP = tTimes.fajr; 
-                nextPName = "الفجر (غداً)";
+                nextP = tTimes.fajr; nextPName = "الفجر (غداً)";
                 adhanHasPlayed = false;
             }
 
             document.getElementById('prayerStrip').innerHTML = html;
-            
-            // بدء العداد
             startTimer(nextP, nextPName);
         }
 
@@ -503,13 +489,12 @@
                 const diff = endTime.getTime() - now;
                 
                 if(diff <= 0) {
-                    // وقت الصلاة!
                     timerEl.innerText = "00:00:00";
-                    if(!adhanHasPlayed && diff > -60000) { // تشغيل الآذان مرة واحدة
+                    if(!adhanHasPlayed && diff > -60000) {
                         playAdhan();
                         adhanHasPlayed = true;
                     }
-                    setTimeout(updatePrayerUI, 3000); // تحديث الواجهة بعد 3 ثواني
+                    setTimeout(updatePrayerUI, 3000);
                     clearInterval(timerInterval);
                     return;
                 }
@@ -523,17 +508,11 @@
 
         function playAdhan() {
             const audio = document.getElementById('adhanAudio');
-            // محاولة التشغيل (قد تمنعها المتصفحات إذا لم يتفاعل المستخدم)
-            audio.play().then(() => {
-                alert("حان الآن موعد الصلاة");
-            }).catch(e => {
-                console.log("Audio autoplay blocked: User interaction needed first.");
-                // يمكن إظهار زر هنا لطلب التشغيل
-            });
+            audio.play().catch(e => { console.log("Audio autoplay blocked"); });
         }
 
         // ==========================================
-        // 4. المسبحة، الصوتيات، والتهيئة
+        // 4. المسبحة والآيات
         // ==========================================
         
         // المسبحة
@@ -555,22 +534,52 @@
         }
         function resetTasbih() { tCount = 0; incrementTasbih(); document.getElementById('tasbihCounter').innerText = 0; }
 
-        // آية اليوم + البسملة
+        // الآيات القرآنية (نظام جديد)
         let ayahAudioUrl = "";
         const bismillahUrl = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
         const player = document.getElementById('quranAudio');
         let isPlaying = false;
 
         async function fetchAyah() {
+            const container = document.getElementById('ayahContainer');
+            // إظهار مؤشر التحميل
+            container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i>';
+            
+            // إيقاف الصوت القديم إذا كان يعمل
+            if(isPlaying) {
+                player.pause();
+                isPlaying = false;
+                document.getElementById('audioIcon').className = "fas fa-volume-mute";
+            }
+
             try {
+                // جلب آية عشوائية جديدة
                 const res = await fetch('https://api.alquran.cloud/v1/ayah/random/ar.alafasy');
                 const d = await res.json();
-                ayahAudioUrl = d.data.audio;
-                document.getElementById('ayahContainer').innerHTML = `
-                    <div class="adhkar-text animate__animated animate__fadeIn">"${d.data.text}"</div>
-                    <div style="font-size:0.8rem; color:var(--accent-color);">سورة ${d.data.surah.name} - آية ${d.data.numberInSurah}</div>`;
+                
+                if(d.code === 200) {
+                    ayahAudioUrl = d.data.audio;
+                    container.innerHTML = `
+                        <div class="adhkar-text animate__animated animate__fadeIn">"${d.data.text}"</div>
+                        <div style="font-size:0.8rem; color:var(--accent-color);">سورة ${d.data.surah.name} - آية ${d.data.numberInSurah}</div>`;
+                } else {
+                    throw new Error("API Error");
+                }
             } catch(e) { 
-                document.getElementById('ayahContainer').innerHTML = "لا يوجد اتصال بالإنترنت";
+                // في حال عدم وجود إنترنت، نعرض آية محلية
+                const fallbackAyahs = [
+                    {text: "فَإِنَّ مَعَ الْعُسْرِ يُسْرًا", surah: "الشرح", n: 5},
+                    {text: "وَإِذَا سَأَلَكَ عِبَادِي عَنِّي فَإِنِّي قَرِيبٌ", surah: "البقرة", n: 186},
+                    {text: "لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا", surah: "البقرة", n: 286},
+                    {text: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً", surah: "البقرة", n: 201}
+                ];
+                const randomFallback = fallbackAyahs[Math.floor(Math.random() * fallbackAyahs.length)];
+                
+                container.innerHTML = `
+                    <div class="adhkar-text animate__animated animate__fadeIn">"${randomFallback.text}"</div>
+                    <div style="font-size:0.8rem; color:var(--accent-color);">سورة ${randomFallback.surah}</div>
+                    <div style="font-size:0.7rem; color:gray; margin-top:5px;">(وضع غير متصل)</div>`;
+                ayahAudioUrl = ""; // لا يوجد صوت في الوضع المحلي
             }
         }
 
@@ -580,8 +589,10 @@
                 player.pause(); isPlaying = false; icon.className="fas fa-volume-mute";
                 player.onended = null;
             } else {
-                if(!ayahAudioUrl) return;
-                // السماح للصوت بالعمل (تفعيل الـ Audio Context للمتصفح)
+                if(!ayahAudioUrl) {
+                    alert("الرجاء تحميل آية أولاً (تأكد من الاتصال بالإنترنت)");
+                    return;
+                }
                 player.src = bismillahUrl; 
                 player.play();
                 isPlaying = true; icon.className="fas fa-stop";
@@ -600,23 +611,18 @@
         // 5. التشغيل الأولي
         // ==========================================
         
-        // الجسيمات
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
         
-        // شريط الأسماء الحسنى
         const names = ["الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر", "الخالق", "البارئ", "المصور"];
         document.getElementById('asmaaMarquee').innerHTML = names.map(n => `<span class="god-name">${n}</span>`).join('✦') + names.map(n => `<span class="god-name">${n}</span>`).join('✦');
 
-        // التاريخ الهجري
         const hijriOptions = { year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura' };
         document.getElementById('hijriDisplay').innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', hijriOptions).format(new Date());
 
-        // بدء التشغيل
         requestLocation();
         updateSmartAdhkar();
         fetchAyah();
         
-        // تحديث الأذكار كل ساعة
         setInterval(updateSmartAdhkar, 3600000); 
 
     </script>
