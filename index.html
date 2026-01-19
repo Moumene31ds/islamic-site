@@ -51,7 +51,7 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; padding: 20px;
             backdrop-filter: blur(10px);
-            overflow-y: auto; /* للسماح بالتمرير في الشاشات الصغيرة */
+            overflow-y: auto;
         }
 
         /* تنسيق الخريطة الجديد */
@@ -61,11 +61,10 @@
             border-radius: 15px;
             margin: 15px 0;
             border: 2px solid var(--accent-color);
-            display: none; /* مخفي افتراضياً */
+            display: none;
             z-index: 1;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-        /* تخصيص نافذة الخريطة لتناسب الوضع الليلي */
         .leaflet-popup-content-wrapper { background: #1e293b; color: #fff; border: 1px solid var(--accent-color); }
         .leaflet-popup-tip { background: #1e293b; border: 1px solid var(--accent-color); }
         
@@ -86,7 +85,7 @@
             list-style: none; margin-top: 10px; background: #1e293b;
             border-radius: 15px; max-height: 200px; overflow-y: auto; width: 100%;
             display: none; border: 1px solid var(--border-color);
-            position: absolute; top: 100%; left: 0; z-index: 3500; /* فوق الخريطة */
+            position: absolute; top: 100%; left: 0; z-index: 3500;
         }
         .result-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; text-align: right; font-size: 0.9rem; color: #ccc; transition: 0.2s; }
         .result-item:hover { background: var(--accent-color); color: #000; }
@@ -454,6 +453,13 @@
             // التحقق من الموقع
             const savedLoc = localStorage.getItem('miqat_location');
             if (savedLoc) {
+                // التحقق من تحميل المكتبة قبل المتابعة
+                if(typeof adhan === 'undefined') {
+                    console.log("انتظار تحميل مكتبة الأذان...");
+                    // محاولة بسيطة للانتظار
+                    setTimeout(initApp, 500); 
+                    return;
+                }
                 const data = JSON.parse(savedLoc);
                 coords = new adhan.Coordinates(data.lat, data.lng);
                 unlockApp(data.name, true);
@@ -617,17 +623,38 @@
             document.getElementById('mapContainer').style.display = 'none';
         }
 
+        // --- إصلاح دالة تأكيد الموقع ---
         function confirmLocation() {
-            if(!tempLocationData) return;
-            coords = new adhan.Coordinates(tempLocationData.lat, tempLocationData.lng);
-            
-            localStorage.setItem('miqat_location', JSON.stringify({
-                lat: tempLocationData.lat,
-                lng: tempLocationData.lng,
-                name: tempLocationData.name
-            }));
+            if(!tempLocationData) {
+                alert("يرجى اختيار الموقع أولاً");
+                return;
+            }
 
-            unlockApp(tempLocationData.name);
+            try {
+                // التأكد من تحميل مكتبة المواقيت
+                if (typeof adhan === 'undefined') {
+                    throw new Error("فشل تحميل مكتبة المواقيت. تأكد من الاتصال بالإنترنت.");
+                }
+
+                coords = new adhan.Coordinates(tempLocationData.lat, tempLocationData.lng);
+                
+                // محاولة الحفظ بأمان (لتجنب الأخطاء في التصفح الخفي)
+                try {
+                    localStorage.setItem('miqat_location', JSON.stringify({
+                        lat: tempLocationData.lat,
+                        lng: tempLocationData.lng,
+                        name: tempLocationData.name
+                    }));
+                } catch (e) {
+                    console.log("لم يتم حفظ الموقع (ربما بسبب التصفح الخفي)", e);
+                }
+
+                unlockApp(tempLocationData.name);
+
+            } catch (error) {
+                alert("خطأ: " + error.message);
+                console.error(error);
+            }
         }
 
         function unlockApp(locationName, isAuto = false) {
