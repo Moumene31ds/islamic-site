@@ -6,14 +6,15 @@
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
-    <title>الميقات برو | الإصدار المطور</title>
+    <title>الميقات برو | الإصدار الشامل</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         /* المتغيرات الأساسية */
@@ -24,6 +25,7 @@
             --text-secondary: #cbd5e1;
             --accent-color: #ffd700;
             --accent-glow: rgba(255, 215, 0, 0.5);
+            --ai-color: #0ea5e9; /* لون مميزات الذكاء الاصطناعي */
             --border-color: rgba(255, 255, 255, 0.15);
             --icon-bg: rgba(255, 255, 255, 0.1);
         }
@@ -42,6 +44,14 @@
             overflow-x: hidden; 
             transition: background 1.5s ease, color 1.5s ease; 
             padding-bottom: 90px; 
+        }
+
+        /* --- شارات الذكاء الاصطناعي --- */
+        .ai-badge {
+            background: linear-gradient(45deg, var(--ai-color), #2563eb);
+            color: white; padding: 4px 12px; border-radius: 20px;
+            font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4); margin-bottom: 15px; position: absolute; top: 15px; left: 15px;
         }
 
         /* --- شاشة الموقع الذكية --- */
@@ -103,8 +113,6 @@
         .btn-confirm { flex: 1; padding: 10px; border-radius: 25px; border: none; font-weight: bold; cursor: pointer; background: var(--accent-color); color: #000; }
         .btn-cancel { flex: 1; padding: 10px; border-radius: 25px; border: 1px solid #ff6b6b; font-weight: bold; cursor: pointer; background: transparent; color: #ff6b6b; }
 
-        .or-divider { margin: 20px 0; color: #666; font-size: 0.9rem; }
-        
         .loc-btn {
             background: transparent; color: var(--accent-color); 
             border: 1px solid var(--accent-color);
@@ -244,6 +252,43 @@
             box-shadow: inset 0 0 20px rgba(0,0,0,0.2);
         }
 
+        /* تنسيقات الميكروفون (جديد) */
+        .mic-btn {
+            width: 60px; height: 60px; border-radius: 50%; border: none;
+            background: rgba(255,255,255,0.1); color: var(--text-secondary);
+            font-size: 1.8rem; cursor: pointer; transition: 0.3s;
+            display: flex; align-items: center; justify-content: center; margin: 15px auto 5px auto;
+        }
+        .mic-btn.listening {
+            background: #ef4444; color: white;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* تنسيقات طبيب القلوب (جديد) */
+        .mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .mood-item {
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+            background: rgba(255,255,255,0.05); padding: 10px; border-radius: 15px; cursor: pointer;
+            transition: 0.2s; border: 1px solid transparent;
+        }
+        .mood-item:hover { background: rgba(255,255,255,0.15); transform: translateY(-3px); }
+        .mood-item.active { border-color: var(--ai-color); background: rgba(14, 165, 233, 0.1); }
+        .mood-emoji { font-size: 1.5rem; }
+        .mood-label { font-size: 0.7rem; }
+        #moodRemedy { 
+            display: none; margin-top: 15px; padding: 15px; 
+            background: rgba(14, 165, 233, 0.1); border-radius: 15px; 
+            border-right: 3px solid var(--ai-color); animation: fadeIn 0.5s;
+        }
+
+        /* تنسيقات الرسوم البيانية (جديد) */
+        .chart-container { position: relative; height: 200px; width: 100%; margin-top: 15px; }
+
         /* الشريط السفلي */
         .marquee-container { 
             position: fixed; bottom: 0; left: 0; width: 100%; 
@@ -326,7 +371,7 @@
         
         <header class="header">
             <div class="app-title">
-                <i class="fas fa-kaaba fa-spin" style="animation-duration: 20s;"></i> الميقات
+                <i class="fas fa-kaaba fa-spin" style="animation-duration: 20s;"></i> الميقات <span style="font-size:0.7rem; background:var(--ai-color); padding:2px 8px; border-radius:10px; margin-right:5px; vertical-align: middle;">AI</span>
             </div>
             <div class="header-actions">
                 <button class="btn-icon" onclick="resetLocationData()"><i class="fas fa-map-marker-alt"></i></button>
@@ -383,6 +428,24 @@
 
         <div class="prayer-strip" id="prayerStrip"></div>
 
+        <div class="card animate__animated animate__fadeInUp">
+            <div class="ai-badge"><i class="fas fa-brain"></i> طبيب القلوب</div>
+            <h3 style="font-size:1rem; margin-bottom:5px;">كيف تشعر الآن؟</h3>
+            <p style="font-size:0.8rem; color:var(--text-secondary);">اختر حالتك ليختار لك النظام الآية والدعاء المناسبين</p>
+            
+            <div class="mood-grid">
+                <div class="mood-item" onclick="analyzeMood('anxious')"><div class="mood-emoji">😰</div><div class="mood-label">قلق</div></div>
+                <div class="mood-item" onclick="analyzeMood('sad')"><div class="mood-emoji">😔</div><div class="mood-label">حزين</div></div>
+                <div class="mood-item" onclick="analyzeMood('angry')"><div class="mood-emoji">😡</div><div class="mood-label">غاضب</div></div>
+                <div class="mood-item" onclick="analyzeMood('happy')"><div class="mood-emoji">😊</div><div class="mood-label">سعيد</div></div>
+            </div>
+
+            <div id="moodRemedy">
+                <div id="remedyText" style="font-family:'Amiri'; font-size:1.2rem; line-height:1.7; margin-bottom:15px;"></div>
+                <div id="remedySource" style="font-size:0.85rem; color:var(--ai-color); border-top:1px solid rgba(255,255,255,0.1); padding-top:10px;"></div>
+            </div>
+        </div>
+
         <div class="card animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
             <span class="smart-adhkar-tag" id="adhkarType">ذكر عشوائي</span>
             <div class="adhkar-content">
@@ -404,14 +467,29 @@
         </div>
 
         <div class="card tasbih-wrapper">
+            <div class="ai-badge" style="background: linear-gradient(45deg, #ef4444, #f97316); position:relative; top:0; left:0; margin-bottom:10px;"><i class="fas fa-microphone"></i> تسبيح صوتي ذكي</div>
             <h3 style="margin-bottom: 25px;">السبحة الإلكترونية</h3>
             <div class="tasbih-ring" onclick="incrementTasbih()" id="tasbihRingElem">
                 <div class="tasbih-inner" id="tasbihCounter">0</div>
             </div>
-            <div style="margin-top: 20px;">
-                <button onclick="resetTasbih()" style="background:rgba(255,255,255,0.1); padding:8px 20px; border-radius:20px; border:none; color:var(--text-secondary); cursor: pointer;">
+            
+            <div style="margin-top: 15px;">
+                <p style="font-size:0.8rem; color:#aaa; margin-bottom:5px;">اضغط وتحدث: "سبحان الله"</p>
+                <button class="mic-btn" id="micBtn" onclick="toggleVoiceTasbih()">
+                    <i class="fas fa-microphone-alt"></i>
+                </button>
+                <div id="voiceStatus" style="font-size:0.8rem; color:var(--ai-color); height:20px;"></div>
+                
+                <button onclick="resetTasbih()" style="background:rgba(255,255,255,0.1); padding:8px 20px; border-radius:20px; border:none; color:var(--text-secondary); cursor: pointer; margin-top:15px;">
                     <i class="fas fa-rotate-right"></i> تصفير
                 </button>
+            </div>
+        </div>
+
+        <div class="card animate__animated animate__fadeInUp">
+            <div class="ai-badge" style="background: linear-gradient(45deg, #8b5cf6, #d946ef); position:relative; top:0; left:0;"><i class="fas fa-chart-pie"></i> إحصائيات الأوقات</div>
+            <div class="chart-container">
+                <canvas id="prayerChart"></canvas>
             </div>
         </div>
 
@@ -425,7 +503,8 @@
     <audio id="adhanAudio" src="https://cdn.islamic.network/adhan/makkah.mp3" preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
-    <script src="https://unpkg.com/adhan@4.4.0/dist/adhan.min.js"></script>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/adhan/4.4.0/adhan.min.js"></script>
 
     <script>
         // ==========================================
@@ -437,6 +516,7 @@
         let hijriOffset = 0; 
         let mapInstance = null;
         let mapMarker = null;
+        let chartInstance = null;
 
         async function initApp() {
             // استعادة تعديل الهجري
@@ -698,6 +778,7 @@
                 updateHijriDate();
                 updateSmartAdhkar();
                 fetchAyah();
+                initChart(); // إضافة الذكاء الاصطناعي
             } catch (e) {
                 console.error("خطأ في تحديث الواجهة:", e);
             }
@@ -912,7 +993,7 @@
         }
 
         // ==========================================
-        // 6. الأذكار والقرآن والمسبحة
+        // 6. الأذكار والقرآن والمسبحة والميزات الذكية
         // ==========================================
         const adhkarData = {
             morning: ["أصبَحنا وأصبَحَ المُلكُ للهِ", "اللهم بك أصبحنا وبك أمسينا", "بسم الله الذي لا يضر مع اسمه شيء", "رضيت بالله رباً"],
@@ -952,7 +1033,7 @@
             } catch(e) { container.innerHTML = `<div class="adhkar-text">"فَإِنَّ مَعَ الْعُسْرِ يُسْرًا"</div>`; }
         }
 
-        // المسبحة
+        // --- المسبحة والمسبحة الصوتية ---
         let tCount = parseInt(localStorage.getItem('tasbihCount')) || 0;
         const ringElem = document.getElementById('tasbihRingElem');
         document.getElementById('tasbihCounter').innerText = tCount;
@@ -966,6 +1047,103 @@
         }
         function updateTasbihRing() { ringElem.style.background = `conic-gradient(var(--accent-color) ${(tCount % 33) * (360 / 33)}deg, transparent 0%)`; }
         function resetTasbih() { tCount = 0; incrementTasbih(); document.getElementById('tasbihCounter').innerText = 0; }
+
+        // --- التعرف الصوتي للمسبحة ---
+        let recognition;
+        let isListening = false;
+        function toggleVoiceTasbih() {
+            if(!('webkitSpeechRecognition' in window)) {
+                alert("المتصفح لا يدعم الميزة الصوتية (جرب Chrome)");
+                return;
+            }
+            const btn = document.getElementById('micBtn');
+            const status = document.getElementById('voiceStatus');
+            if(isListening) {
+                recognition.stop();
+                isListening = false;
+                btn.classList.remove('listening');
+                status.innerText = "";
+                return;
+            }
+            recognition = new webkitSpeechRecognition();
+            recognition.lang = 'ar-SA';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+            recognition.onstart = () => {
+                isListening = true;
+                btn.classList.add('listening');
+                status.innerText = "جاري الاستماع... قل 'سبحان الله'";
+            };
+            recognition.onresult = (event) => {
+                const last = event.results.length - 1;
+                const transcript = event.results[last][0].transcript.trim();
+                if(transcript.includes('الله') || transcript.includes('سبحان') || transcript.includes('أكبر')) {
+                    incrementTasbih();
+                    status.innerText = "✨ تم الاحتساب: " + transcript;
+                }
+            };
+            recognition.onerror = () => {
+                isListening = false;
+                btn.classList.remove('listening');
+                status.innerText = "توقف الاستماع";
+            };
+            recognition.start();
+        }
+
+        // --- طبيب القلوب (AI Mood) ---
+        const moodData = {
+            anxious: { t: "أَلا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ", s: "الرعد: 28", d: "اللهم إني أعوذ بك من الهم والحزن" },
+            sad: { t: "لَا تَحْزَنْ إِنَّ اللَّهَ مَعَنَا", s: "التوبة: 40", d: "يا حي يا قيوم برحمتك أستغيث" },
+            angry: { t: "وَالْكَاظِمِينَ الْغَيْظَ وَالْعَافِينَ عَنِ النَّاسِ", s: "آل عمران: 134", d: "أعوذ بالله من الشيطان الرجيم" },
+            happy: { t: "لَئِن شَكَرْتُمْ لَأَزِيدَنَّكُمْ", s: "إبراهيم: 7", d: "الحمد لله الذي بنعمته تتم الصالحات" }
+        };
+
+        function analyzeMood(mood) {
+            const data = moodData[mood];
+            const box = document.getElementById('moodRemedy');
+            
+            // تأثير بصري
+            document.querySelectorAll('.mood-item').forEach(i => i.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+
+            box.style.display = 'block';
+            box.classList.remove('animate__fadeIn');
+            void box.offsetWidth; 
+            box.classList.add('animate__fadeIn');
+
+            document.getElementById('remedyText').innerHTML = `"${data.t}"<br><br><span style="color:white; font-size:0.9rem">💡 دعاء مقترح: ${data.d}</span>`;
+            document.getElementById('remedySource').innerText = data.s;
+        }
+
+        // --- تحليلات العبادة (Charts) ---
+        function initChart() {
+            const ctx = document.getElementById('prayerChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['الفجر', 'الظهر', 'العصر', 'المغرب', 'العشاء'],
+                    datasets: [{
+                        label: 'مؤشر الوقت',
+                        data: [10, 30, 50, 70, 90],
+                        borderColor: '#ffd700',
+                        backgroundColor: 'rgba(255, 215, 0, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: {display: false} },
+                    scales: {
+                        y: { display: false },
+                        x: { ticks: { color: '#ccc' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
 
         // تشغيل الخلفية والنصوص المتحركة
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
