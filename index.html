@@ -450,19 +450,26 @@
                 changeAdhanSound();
             }
 
-            // التحقق من الموقع
+            // التحقق من الموقع المحفوظ
             const savedLoc = localStorage.getItem('miqat_location');
             if (savedLoc) {
-                // التحقق من تحميل المكتبة قبل المتابعة
-                if(typeof adhan === 'undefined') {
-                    console.log("انتظار تحميل مكتبة الأذان...");
-                    // محاولة بسيطة للانتظار
-                    setTimeout(initApp, 500); 
-                    return;
-                }
-                const data = JSON.parse(savedLoc);
-                coords = new adhan.Coordinates(data.lat, data.lng);
-                unlockApp(data.name, true);
+                // محاولة الانتظار حتى تحميل مكتبة الأذان
+                const checkAdhanLib = () => {
+                    if(typeof adhan !== 'undefined') {
+                        try {
+                            const data = JSON.parse(savedLoc);
+                            coords = new adhan.Coordinates(data.lat, data.lng);
+                            unlockApp(data.name, true);
+                        } catch(e) {
+                            console.error("خطأ في قراءة الموقع المحفوظ:", e);
+                            localStorage.removeItem('miqat_location');
+                        }
+                    } else {
+                        // إعادة المحاولة بعد 200 ملي ثانية
+                        setTimeout(checkAdhanLib, 200);
+                    }
+                };
+                checkAdhanLib();
             }
         }
 
@@ -510,6 +517,13 @@
         function initializeLeafletMap(lat, lng) {
             if (mapInstance) {
                 mapInstance.remove(); // تنظيف الخريطة السابقة
+            }
+
+            // التأكد من تحميل Leaflet
+            if(typeof L === 'undefined') {
+                alert("جاري تحميل الخريطة، يرجى الانتظار...");
+                setTimeout(() => initializeLeafletMap(lat, lng), 1000);
+                return;
             }
 
             // إنشاء الخريطة
@@ -623,22 +637,25 @@
             document.getElementById('mapContainer').style.display = 'none';
         }
 
-        // --- إصلاح دالة تأكيد الموقع ---
+        // --- دالة تأكيد الموقع المصححة ---
         function confirmLocation() {
+            // 1. التحقق من وجود بيانات الموقع
             if(!tempLocationData) {
-                alert("يرجى اختيار الموقع أولاً");
+                alert("يرجى اختيار الموقع من القائمة أو الخريطة أولاً");
+                return;
+            }
+
+            // 2. التحقق من تحميل مكتبة الأذان
+            if (typeof adhan === 'undefined') {
+                alert("جاري تحميل مكتبة المواقيت، يرجى الانتظار قليلاً أو التأكد من اتصال الإنترنت.");
                 return;
             }
 
             try {
-                // التأكد من تحميل مكتبة المواقيت
-                if (typeof adhan === 'undefined') {
-                    throw new Error("فشل تحميل مكتبة المواقيت. تأكد من الاتصال بالإنترنت.");
-                }
-
+                // إنشاء كائن الإحداثيات
                 coords = new adhan.Coordinates(tempLocationData.lat, tempLocationData.lng);
                 
-                // محاولة الحفظ بأمان (لتجنب الأخطاء في التصفح الخفي)
+                // حفظ الموقع
                 try {
                     localStorage.setItem('miqat_location', JSON.stringify({
                         lat: tempLocationData.lat,
@@ -646,34 +663,44 @@
                         name: tempLocationData.name
                     }));
                 } catch (e) {
-                    console.log("لم يتم حفظ الموقع (ربما بسبب التصفح الخفي)", e);
+                    console.log("لم يتم حفظ الموقع في الذاكرة المحلية", e);
                 }
 
+                // فتح التطبيق
                 unlockApp(tempLocationData.name);
 
             } catch (error) {
-                alert("خطأ: " + error.message);
+                alert("حدث خطأ غير متوقع: " + error.message);
                 console.error(error);
             }
         }
 
+        // --- دالة فتح التطبيق المصححة ---
         function unlockApp(locationName, isAuto = false) {
+            // منع التكرار إذا تم الفتح مسبقاً إلا إذا كان تلقائياً
             if(isLocationFound && !isAuto) return;
+            
             isLocationFound = true;
             
+            // 1. إظهار التطبيق وإخفاء نافذة الموقع فوراً
             document.getElementById('locationOverlay').style.display = 'none';
             document.getElementById('appContainer').style.display = 'block';
             
-            updatePrayerUI();
-            updateHijriDate();
-            
+            // 2. تحديث الاسم
             document.getElementById('locationText').innerHTML = `
                 <i class="fas fa-map-marker-alt" style="color:#10b981"></i> ${locationName} 
                 <span style="font-size:0.7rem; color:gray; margin-right:5px">(اضغط للتغيير)</span>
             `;
-            
-            updateSmartAdhkar();
-            fetchAyah();
+
+            // 3. محاولة تحديث الحسابات
+            try {
+                updatePrayerUI();
+                updateHijriDate();
+                updateSmartAdhkar();
+                fetchAyah();
+            } catch (e) {
+                console.error("خطأ في تحديث الواجهة:", e);
+            }
         }
 
         function resetLocationData() {
