@@ -12,6 +12,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <style>
         /* المتغيرات الأساسية */
         :root {
@@ -48,7 +51,23 @@
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             text-align: center; padding: 20px;
             backdrop-filter: blur(10px);
+            overflow-y: auto; /* للسماح بالتمرير في الشاشات الصغيرة */
         }
+
+        /* تنسيق الخريطة الجديد */
+        #mapContainer {
+            height: 250px;
+            width: 100%;
+            border-radius: 15px;
+            margin: 15px 0;
+            border: 2px solid var(--accent-color);
+            display: none; /* مخفي افتراضياً */
+            z-index: 1;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        /* تخصيص نافذة الخريطة لتناسب الوضع الليلي */
+        .leaflet-popup-content-wrapper { background: #1e293b; color: #fff; border: 1px solid var(--accent-color); }
+        .leaflet-popup-tip { background: #1e293b; border: 1px solid var(--accent-color); }
         
         /* تنسيقات البحث والتأكيد */
         .manual-search-box {
@@ -67,11 +86,12 @@
             list-style: none; margin-top: 10px; background: #1e293b;
             border-radius: 15px; max-height: 200px; overflow-y: auto; width: 100%;
             display: none; border: 1px solid var(--border-color);
+            position: absolute; top: 100%; left: 0; z-index: 3500; /* فوق الخريطة */
         }
         .result-item { padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); cursor: pointer; text-align: right; font-size: 0.9rem; color: #ccc; transition: 0.2s; }
         .result-item:hover { background: var(--accent-color); color: #000; }
 
-        /* منطقة تأكيد الموقع الجديدة */
+        /* منطقة تأكيد الموقع */
         .confirm-step {
             display: none; width: 100%; max-width: 350px;
             background: rgba(255,255,255,0.05); padding: 20px;
@@ -136,7 +156,7 @@
         .ramadan-num { font-size: 1.5rem; font-weight: 800; color: #fff; font-family: 'Arial'; text-shadow: 0 0 10px rgba(255,215,0,0.3); }
         .ramadan-label { font-size: 0.7rem; color: #ccc; margin-top: 5px; }
 
-        /* دائرة المؤقت الجديدة */
+        /* دائرة المؤقت */
         .timer-container { position: relative; width: 220px; height: 220px; margin: 0 auto 20px auto; display: flex; align-items: center; justify-content: center; }
         .timer-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
         .timer-circle-bg { fill: none; stroke: rgba(255,255,255,0.1); stroke-width: 8; }
@@ -255,19 +275,25 @@
         <i class="fas fa-map-marked-alt" style="font-size: 4rem; color: var(--accent-color); margin-bottom: 20px;"></i>
         <h2 style="color:white; margin-bottom:10px;">إعداد الموقع</h2>
         
-        <div id="searchSection">
-            <p style="color:#ccc; max-width:300px; line-height:1.6; font-size: 0.9rem;">
-                لضبط المواقيت، ابحث عن مدينتك أو استخدم GPS
+        <div id="searchSection" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center;">
+            <p style="color:#ccc; line-height:1.6; font-size: 0.9rem;">
+                لضبط المواقيت بدقة، استخدم الخريطة أو البحث
             </p>
-            <div class="manual-search-box">
-                <input type="text" id="citySearchInput" class="search-input" placeholder="اكتب اسم مدينتك هنا..." onkeyup="if(event.key === 'Enter') searchCity()">
+
+            <div id="mapContainer"></div>
+
+            <div class="manual-search-box" style="margin: 0 auto 15px auto;">
+                <input type="text" id="citySearchInput" class="search-input" placeholder="اكتب اسم مدينتك..." onkeyup="if(event.key === 'Enter') searchCity()">
                 <i class="fas fa-search search-btn-icon" onclick="searchCity()"></i>
                 <ul class="results-list" id="searchResultsList"></ul>
             </div>
-            <div class="or-divider">أو</div>
-            <button class="loc-btn" onclick="retryLocation()">
-                <i class="fas fa-location-arrow"></i> استخدام GPS
-            </button>
+
+            <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                <button class="loc-btn" onclick="initMapWithGPS()">
+                    <i class="fas fa-crosshairs"></i> تحديد دقيق عبر الخريطة
+                </button>
+            </div>
+            
             <div id="locationErrorMsg" style="color:#ff6b6b; margin-top:15px; font-size:0.9rem; display:none;"></div>
         </div>
 
@@ -404,12 +430,14 @@
 
     <script>
         // ==========================================
-        // 1. المتغيرات العامة ومنطق الموقع
+        // 1. المتغيرات العامة
         // ==========================================
         let coords = null;
         let isLocationFound = false;
-        let tempLocationData = null; // لتخزين الموقع المؤقت قبل التأكيد
-        let hijriOffset = 0; // تعديل التاريخ الهجري
+        let tempLocationData = null; 
+        let hijriOffset = 0; 
+        let mapInstance = null;
+        let mapMarker = null;
 
         async function initApp() {
             // استعادة تعديل الهجري
@@ -432,7 +460,99 @@
             }
         }
 
-        // البحث الذكي
+        // ==========================================
+        // 2. نظام الخرائط والموقع (المطور)
+        // ==========================================
+        async function initMapWithGPS() {
+            const mapDiv = document.getElementById('mapContainer');
+            const btn = document.querySelector('.loc-btn');
+            const errorMsg = document.getElementById('locationErrorMsg');
+            
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري جلب الموقع...';
+            errorMsg.style.display = 'none';
+
+            if (!navigator.geolocation) {
+                errorMsg.innerText = "المتصفح لا يدعم تحديد الموقع.";
+                errorMsg.style.display = 'block';
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // إظهار الخريطة
+                    mapDiv.style.display = 'block';
+                    btn.style.display = 'none'; // إخفاء الزر بعد النجاح
+                    
+                    initializeLeafletMap(lat, lng);
+                    getAddressFromCoords(lat, lng); // جلب اسم المنطقة
+                },
+                () => {
+                    // في حالة الفشل، نظهر خريطة افتراضية (مكة المكرمة)
+                    mapDiv.style.display = 'block';
+                    btn.style.display = 'none';
+                    initializeLeafletMap(21.4225, 39.8262);
+                    errorMsg.innerText = "تعذر تحديد الموقع تلقائياً. قم بتحريك الدبوس يدوياً.";
+                    errorMsg.style.display = 'block';
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        }
+
+        function initializeLeafletMap(lat, lng) {
+            if (mapInstance) {
+                mapInstance.remove(); // تنظيف الخريطة السابقة
+            }
+
+            // إنشاء الخريطة
+            mapInstance = L.map('mapContainer').setView([lat, lng], 13);
+
+            // إضافة طبقة الخرائط (نمط داكن - Dark Mode CartoDB)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CartoDB',
+                subdomains: 'abcd',
+                maxZoom: 19
+            }).addTo(mapInstance);
+
+            // إضافة الدبوس القابل للسحب
+            mapMarker = L.marker([lat, lng], {draggable: true}).addTo(mapInstance);
+
+            // حدث عند سحب الدبوس
+            mapMarker.on('dragend', function(event) {
+                const position = mapMarker.getLatLng();
+                mapMarker.setLatLng(position, {draggable: true}).bindPopup("جاري تحديد المكان...").openPopup();
+                getAddressFromCoords(position.lat, position.lng);
+                mapInstance.panTo(position);
+            });
+
+            // تصحيح حجم الخريطة بعد التحميل
+            setTimeout(() => { mapInstance.invalidateSize(); }, 200);
+        }
+
+        // دالة عكس الإحداثيات لجلب اسم المدينة
+        async function getAddressFromCoords(lat, lng) {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept_language=ar`);
+                const data = await response.json();
+                
+                let areaName = data.address.city || data.address.town || data.address.village || data.address.county || "موقع محدد";
+                let fullName = data.display_name;
+
+                // تحديث البيانات المؤقتة
+                stageLocation(lat, lng, areaName, fullName);
+                
+                if(mapMarker) {
+                    mapMarker.bindPopup(`<b>${areaName}</b><br>اضغط "تأكيد" بالأسفل`).openPopup();
+                }
+
+            } catch (e) {
+                stageLocation(lat, lng, "إحداثيات محددة", `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
+            }
+        }
+
+        // البحث الكتابي
         async function searchCity() {
             const query = document.getElementById('citySearchInput').value;
             const list = document.getElementById('searchResultsList');
@@ -459,8 +579,16 @@
                     li.className = 'result-item';
                     const cityName = place.display_name.split(',')[0];
                     li.innerHTML = `<i class="fas fa-map-marker-alt"></i> ${place.display_name}`;
-                    // التعديل هنا: استدعاء دالة العرض المؤقت بدلاً من الاختيار المباشر
-                    li.onclick = () => stageLocation(place.lat, place.lon, cityName, place.display_name);
+                    li.onclick = () => {
+                        // عند اختيار نتيجة من البحث، نعرضها على الخريطة أولاً
+                        const lat = parseFloat(place.lat);
+                        const lon = parseFloat(place.lon);
+                        document.getElementById('mapContainer').style.display = 'block';
+                        document.querySelector('.loc-btn').style.display = 'none';
+                        initializeLeafletMap(lat, lon);
+                        stageLocation(lat, lon, cityName, place.display_name);
+                        list.style.display = 'none';
+                    };
                     list.appendChild(li);
                 });
 
@@ -469,7 +597,6 @@
             }
         }
 
-        // --- منطق التأكيد الجديد ---
         function stageLocation(lat, lon, shortName, fullName) {
             tempLocationData = { lat: parseFloat(lat), lng: parseFloat(lon), name: shortName };
             
@@ -482,9 +609,12 @@
         function cancelLocation() {
             tempLocationData = null;
             document.getElementById('confirmSection').style.display = 'none';
-            document.getElementById('searchSection').style.display = 'block';
+            document.getElementById('searchSection').style.display = 'flex';
             document.getElementById('searchResultsList').style.display = 'none';
             document.getElementById('citySearchInput').value = '';
+            document.querySelector('.loc-btn').style.display = 'flex';
+            document.querySelector('.loc-btn').innerHTML = '<i class="fas fa-crosshairs"></i> تحديد دقيق عبر الخريطة';
+            document.getElementById('mapContainer').style.display = 'none';
         }
 
         function confirmLocation() {
@@ -498,32 +628,6 @@
             }));
 
             unlockApp(tempLocationData.name);
-        }
-
-        function retryLocation() {
-            // للـ GPS نستخدم التأكيد المباشر لأنه دقيق غالباً، أو يمكن إضافة خطوة تأكيد إذا أردت
-            const errorMsg = document.getElementById('locationErrorMsg');
-            errorMsg.style.display = 'none';
-            document.querySelector('.loc-btn').innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري البحث...';
-
-            if(navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(pos => {
-                    coords = new adhan.Coordinates(pos.coords.latitude, pos.coords.longitude);
-                    localStorage.setItem('miqat_location', JSON.stringify({
-                        lat: pos.coords.latitude,
-                        lng: pos.coords.longitude,
-                        name: "موقعي الحالي (GPS)"
-                    }));
-                    unlockApp("GPS دقيق");
-                }, (err) => {
-                    document.querySelector('.loc-btn').innerHTML = '<i class="fas fa-location-arrow"></i> استخدام GPS الحالي';
-                    errorMsg.style.display = 'block';
-                    errorMsg.innerText = "تعذر تحديد الموقع. الرجاء استخدام البحث اليدوي.";
-                }, { enableHighAccuracy: true });
-            } else {
-                errorMsg.innerText = "المتصفح لا يدعم GPS.";
-                errorMsg.style.display = 'block';
-            }
         }
 
         function unlockApp(locationName, isAuto = false) {
@@ -553,7 +657,7 @@
         }
 
         // ==========================================
-        // 2. الصوت والأذان
+        // 3. الصوت والأذان
         // ==========================================
         function changeAdhanSound() {
             const select = document.getElementById('adhanSelector');
@@ -569,7 +673,7 @@
         }
 
         // ==========================================
-        // 3. التواريخ والعدادات
+        // 4. التواريخ والعدادات
         // ==========================================
         function updateRamadanCountdown() {
             const now = new Date();
@@ -606,7 +710,7 @@
         }
 
         // ==========================================
-        // 4. البوصلة والمواقيت (مع الدائرة الذكية)
+        // 5. البوصلة والمواقيت
         // ==========================================
         function openQibla() {
             document.getElementById('qiblaModal').style.display = 'flex';
@@ -639,7 +743,7 @@
             
             // حساب أوقات اليوم
             const times = new adhan.PrayerTimes(coords, date, params);
-            // حساب أوقات الغد (للفجر)
+            // حساب أوقات الغد
             const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
             const timesTomorrow = new adhan.PrayerTimes(coords, tomorrow, params);
             
@@ -657,17 +761,13 @@
             
             let html = '';
             let nextP = null;
-            let currentPTime = null; // وقت الصلاة الحالية لبدء العداد
+            let currentPTime = null;
 
-            // تحديد الصلاة القادمة والسابقة
             for (let i = 0; i < pList.length; i++) {
                 if (pList[i].t > date && !nextP && pList[i].n !== 'الشروق') {
                     nextP = pList[i];
-                    // الصلاة السابقة هي الاندكس السابق، أو العشاء (أمس) إذا كنا في الفجر
                     if (i > 0) currentPTime = pList[i-1].t;
                     else {
-                        // حالة خاصة: الفجر، الصلاة السابقة هي العشاء (نحتاج وقت عشاء أمس بدقة أكبر لكن سنفترض وقتا تقريبيا للعداد)
-                        // للتبسيط سنأخذ الوقت الحالي ناقص ساعتين كبداية افتراضية إذا لم نتمكن من الحساب المعقد
                          const yest = new Date(); yest.setDate(yest.getDate()-1);
                          const timesYest = new adhan.PrayerTimes(coords, yest, params);
                          currentPTime = timesYest.isha;
@@ -675,13 +775,11 @@
                 }
             }
 
-            // إذا انتهت صلوات اليوم، القادمة هي فجر الغد
             if(!nextP) {
                 nextP = {n:'الفجر (غداً)', t:timesTomorrow.fajr};
                 currentPTime = times.isha;
             }
 
-            // بناء واجهة الشريط
             pList.forEach(p => {
                 if(p.n === 'الشروق') return;
                 const isNext = (nextP && p.n === nextP.n) || (nextP.n.includes('غداً') && p.n === 'الفجر');
@@ -694,7 +792,6 @@
 
             document.getElementById('prayerStrip').innerHTML = html;
             
-            // تشغيل المؤقت مع الدائرة
             if(nextP && currentPTime) {
                 startTimer(currentPTime, nextP.t, nextP.n);
             }
@@ -715,7 +812,6 @@
                 const diff = endTime - now;
                 const elapsed = now - startTime;
 
-                // تحديث الدائرة
                 let percent = elapsed / totalDuration;
                 if(percent > 1) percent = 1;
                 const offset = circumference - (percent * circumference);
@@ -743,14 +839,12 @@
             const icon = document.getElementById('audioIcon');
             const player = document.getElementById('quranAudio');
             
-            // إذا كان القرآن يعمل
             if(!player.paused) {
                 player.pause();
                 icon.className="fas fa-volume-mute";
                 return;
             }
 
-            // تشغيل القرآن
             if(ayahAudioUrl) {
                 player.src = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3"; 
                 player.play();
@@ -764,7 +858,7 @@
         }
 
         // ==========================================
-        // 5. الأذكار والقرآن (بدون تغيير كبير)
+        // 6. الأذكار والقرآن والمسبحة
         // ==========================================
         const adhkarData = {
             morning: ["أصبَحنا وأصبَحَ المُلكُ للهِ", "اللهم بك أصبحنا وبك أمسينا", "بسم الله الذي لا يضر مع اسمه شيء", "رضيت بالله رباً"],
