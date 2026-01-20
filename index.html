@@ -6,7 +6,7 @@
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
-    <title>الميقات برو | الإصدار المطور</title>
+    <title>الميقات برو | الإصدار الاحترافي</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -17,7 +17,7 @@
         /* المتغيرات الأساسية */
         :root {
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --card-bg: rgba(30, 41, 59, 0.65);
+            --card-bg: rgba(30, 41, 59, 0.75);
             --text-primary: #ffffff;
             --text-secondary: #cbd5e1;
             --accent-color: #ffd700;
@@ -27,7 +27,7 @@
         }
 
         body.fajr-mode { --bg-gradient: linear-gradient(135deg, #1a2980, #26d0ce); } 
-        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.7); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
+        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.8); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
         body.maghrib-mode { --bg-gradient: linear-gradient(135deg, #2c3e50, #fd746c); } 
         body.night-mode { --bg-gradient: linear-gradient(135deg, #0f172a 0%, #000000 100%); } 
 
@@ -315,7 +315,7 @@
             <div class="loader-bar-container">
                 <div class="loader-bar"></div>
             </div>
-            <p class="loader-text" id="loaderText">جاري تهيئة المواقيت...</p>
+            <p class="loader-text" id="loaderText">جاري تهيئة أدق المواقيت...</p>
         </div>
     </div>
 
@@ -327,7 +327,7 @@
         
         <div id="searchSection" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center;">
             <p style="color:#ccc; line-height:1.6; font-size: 0.9rem;">
-                لضبط المواقيت بدقة، استخدم الخريطة أو البحث
+                لضبط المواقيت بدقة عالية، حدد مدينتك
             </p>
 
             <div id="mapContainer"></div>
@@ -350,8 +350,24 @@
         <div class="confirm-step" id="confirmSection">
             <div class="confirm-title"><i class="fas fa-check-circle"></i> تأكيد الموقع</div>
             <div class="confirm-details" id="confirmDetailsText"></div>
+            
+            <div style="margin-bottom: 20px; text-align: right;">
+                <label style="color: #ccc; font-size: 0.8rem; margin-bottom: 5px; display: block;">طريقة الحساب (المذهب):</label>
+                <select id="methodSelector" class="audio-select" style="margin-top: 0; background: rgba(0,0,0,0.5);">
+                    <option value="MuslimWorldLeague">رابطة العالم الإسلامي (عام)</option>
+                    <option value="UmmAlQura">أم القرى (السعودية)</option>
+                    <option value="Egyptian">الهيئة المصرية العامة للمساحة</option>
+                    <option value="Karachi">جامعة العلوم الإسلامية بكراتشي</option>
+                    <option value="Dubai">دائرة الشؤون الإسلامية والعمل الخيري (دبي)</option>
+                    <option value="Qatar">وزارة الأوقاف والشؤون الإسلامية (قطر)</option>
+                    <option value="Kuwait">وزارة الأوقاف والشؤون الإسلامية (الكويت)</option>
+                    <option value="MoonsightingCommittee">لجنة رصد الأهلة (عالمي)</option>
+                    <option value="NorthAmerica">أمريكا الشمالية (ISNA)</option>
+                </select>
+            </div>
+
             <div class="confirm-actions">
-                <button class="btn-confirm" onclick="confirmLocation()">نعم، هذا موقعي</button>
+                <button class="btn-confirm" onclick="confirmLocation()">حفظ واستمرار</button>
                 <button class="btn-cancel" onclick="cancelLocation()">بحث آخر</button>
             </div>
         </div>
@@ -360,7 +376,7 @@
     <div class="modal-overlay" id="qiblaModal">
         <div style="color:white; margin-bottom:30px; text-align:center;">
             <h3 style="font-size: 1.5rem; margin-bottom: 10px;">اتجاه القبلة</h3>
-            <p style="font-size:0.9rem; color:#ccc; max-width: 80%;">اجعل الهاتف مسطحاً</p>
+            <p style="font-size:0.9rem; color:#ccc; max-width: 80%;">اجعل الهاتف مسطحاً تماماً</p>
         </div>
         <div class="compass-container">
             <div style="position: absolute; top:-30px; color:white;">الشمال</div>
@@ -380,9 +396,9 @@
                 <i class="fas fa-kaaba fa-spin" style="animation-duration: 20s;"></i> الميقات
             </div>
             <div class="header-actions">
-                <button class="btn-icon" onclick="resetLocationData()"><i class="fas fa-map-marker-alt"></i></button>
-                <button class="btn-icon" onclick="openQibla()"><i class="fas fa-compass"></i></button>
-                <button class="btn-icon" onclick="toggleAudio()"><i class="fas fa-volume-mute" id="audioIcon"></i></button>
+                <button class="btn-icon" onclick="resetLocationData()" title="تغيير الموقع"><i class="fas fa-map-marker-alt"></i></button>
+                <button class="btn-icon" onclick="openQibla()" title="القبلة"><i class="fas fa-compass"></i></button>
+                <button class="btn-icon" onclick="toggleAudio()" title="الصوت"><i class="fas fa-volume-mute" id="audioIcon"></i></button>
             </div>
         </header>
 
@@ -525,7 +541,7 @@
 
     <script>
         // ==========================================
-        // 1. منطق شاشة التحميل
+        // 1. منطق شاشة التحميل والتهيئة
         // ==========================================
         let isAppReady = false;
 
@@ -534,6 +550,7 @@
             const overlay = document.getElementById('locationOverlay');
             
             let checkInterval = setInterval(() => {
+                // التأكد من تحميل مكتبة Adhan بشكل صحيح
                 if (typeof adhan !== 'undefined' && typeof Chart !== 'undefined') {
                     clearInterval(checkInterval);
                     loader.style.opacity = '0';
@@ -547,6 +564,7 @@
                 }
             }, 500);
 
+            // Timeout للحماية في حال فشل التحميل
             setTimeout(() => {
                 if(loader.style.visibility !== 'hidden') {
                     loader.style.opacity = '0';
@@ -555,7 +573,7 @@
                         if(!isLocationFound) overlay.style.display = 'flex';
                     }, 800);
                 }
-            }, 10000);
+            }, 8000);
         }
         checkLibrariesAndHideLoader();
 
@@ -566,9 +584,10 @@
         let isLocationFound = false;
         let tempLocationData = null; 
         let hijriOffset = 0; 
+        let calculationMethod = 'MuslimWorldLeague'; // الافتراضي
         let mapInstance = null;
         let mapMarker = null;
-        let chartInstance = null; // تعريف متغير الشارت
+        let chartInstance = null;
 
         async function initApp() {
             const savedOffset = localStorage.getItem('miqat_hijri_offset');
@@ -580,6 +599,7 @@
                 changeAdhanSound();
             }
 
+            // استرجاع الموقع وطريقة الحساب المحفوظة
             const savedLoc = localStorage.getItem('miqat_location');
             if (savedLoc) {
                 const checkAdhanLib = () => {
@@ -587,6 +607,7 @@
                         try {
                             const data = JSON.parse(savedLoc);
                             coords = new adhan.Coordinates(data.lat, data.lng);
+                            calculationMethod = data.method || 'MuslimWorldLeague';
                             unlockApp(data.name, true);
                         } catch(e) {
                             console.error("خطأ في قراءة الموقع المحفوظ:", e);
@@ -661,12 +682,29 @@
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept_language=ar`);
                 const data = await response.json();
-                let areaName = data.address.city || data.address.town || "موقع محدد";
+                let areaName = data.address.city || data.address.town || data.address.state || "موقع محدد";
                 stageLocation(lat, lng, areaName, data.display_name);
-                if(mapMarker) mapMarker.bindPopup(`<b>${areaName}</b><br>اضغط "تأكيد" بالأسفل`).openPopup();
+                if(mapMarker) mapMarker.bindPopup(`<b>${areaName}</b><br>اضغط "حفظ واستمرار" بالأسفل`).openPopup();
+                
+                // اقتراح طريقة الحساب بناءً على الدولة
+                autoSelectMethod(data.address.country_code);
             } catch (e) {
                 stageLocation(lat, lng, "إحداثيات محددة", `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`);
             }
+        }
+
+        function autoSelectMethod(countryCode) {
+            const select = document.getElementById('methodSelector');
+            if(!countryCode) return;
+            countryCode = countryCode.toLowerCase();
+            if(countryCode === 'sa') select.value = 'UmmAlQura';
+            else if(countryCode === 'eg') select.value = 'Egyptian';
+            else if(countryCode === 'pk') select.value = 'Karachi';
+            else if(countryCode === 'kw') select.value = 'Kuwait';
+            else if(countryCode === 'qa') select.value = 'Qatar';
+            else if(countryCode === 'ae') select.value = 'Dubai';
+            else if(countryCode === 'us' || countryCode === 'ca') select.value = 'NorthAmerica';
+            else select.value = 'MuslimWorldLeague';
         }
 
         async function searchCity() {
@@ -693,6 +731,9 @@
                         initializeLeafletMap(lat, lon);
                         stageLocation(lat, lon, cityName, place.display_name);
                         list.style.display = 'none';
+                        // محاولة استخراج كود الدولة من الاسم إذا لم يتوفر مباشرة (تبسيط)
+                        // يفضل هنا استخدام reverse geocoding مرة أخرى للدقة
+                        getAddressFromCoords(lat, lon);
                     };
                     list.appendChild(li);
                 });
@@ -719,10 +760,12 @@
         function confirmLocation() {
             if(!tempLocationData) return;
             try {
+                const selectedMethod = document.getElementById('methodSelector').value;
                 coords = new adhan.Coordinates(tempLocationData.lat, tempLocationData.lng);
                 localStorage.setItem('miqat_location', JSON.stringify({
-                    lat: tempLocationData.lat, lng: tempLocationData.lng, name: tempLocationData.name
+                    lat: tempLocationData.lat, lng: tempLocationData.lng, name: tempLocationData.name, method: selectedMethod
                 }));
+                calculationMethod = selectedMethod;
                 unlockApp(tempLocationData.name);
             } catch (error) { alert("حدث خطأ: " + error.message); }
         }
@@ -751,7 +794,7 @@
         }
 
         // ==========================================
-        // 4. الوظائف الأساسية
+        // 4. الوظائف الأساسية للمواقيت (The Core)
         // ==========================================
         function changeAdhanSound() {
             const select = document.getElementById('adhanSelector');
@@ -769,8 +812,10 @@
         function updateRamadanCountdown() {
             const now = new Date();
             const currentYear = now.getFullYear();
+            // تاريخ تقريبي لرمضان (يمكن تحديثه سنوياً أو جلبه بAPI)
             let ramadanDate = new Date(`February 28, ${currentYear}`); 
             if (now > ramadanDate) ramadanDate = new Date(`February 17, ${currentYear + 1}`); 
+            
             const diff = ramadanDate - now;
             if (diff <= 0) { document.querySelector('.ramadan-header h3').innerText = "رمضان مبارك!"; return; }
             const d = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -822,8 +867,16 @@
         function updatePrayerUI() {
             if(!coords) return;
             const date = new Date();
-            const params = adhan.CalculationMethod.MuslimWorldLeague();
-            params.madhab = adhan.Madhab.Shafi;
+            
+            // تحديد طريقة الحساب بناءً على اختيار المستخدم
+            let params;
+            if (adhan.CalculationMethod[calculationMethod]) {
+                params = adhan.CalculationMethod[calculationMethod]();
+            } else {
+                params = adhan.CalculationMethod.MuslimWorldLeague();
+            }
+            
+            params.madhab = adhan.Madhab.Shafi; // الافتراضي شافعي (جمهور العلماء)
             
             const times = new adhan.PrayerTimes(coords, date, params);
             const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
@@ -939,6 +992,9 @@
             }
         }
 
+        // ==========================================
+        // 5. الأذكار والخصائص الإضافية
+        // ==========================================
         const adhkarData = {
             morning: ["أصبَحنا وأصبَحَ المُلكُ للهِ", "اللهم بك أصبحنا وبك أمسينا", "بسم الله الذي لا يضر مع اسمه شيء", "رضيت بالله رباً"],
             evening: ["أمسَينا وأمسى المُلكُ للهِ", "اللهم بك أمسينا وبك أصبحنا", "أعوذ بكلمات الله التامات", "يا حي يا قيوم برحمتك أستغيث"],
@@ -1057,7 +1113,7 @@
             document.getElementById('remedySource').innerText = data.s;
         }
 
-        // --- تحليلات العبادة ---
+        // --- تحليلات العبادة (Charts) ---
         function initChart() {
             const ctx = document.getElementById('prayerChart').getContext('2d');
             if(chartInstance) chartInstance.destroy();
@@ -1087,14 +1143,14 @@
             });
         }
 
-        // تشغيل الخلفية
+        // تشغيل الخلفية والنصوص المتحركة
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
-        
         const names = ["الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر"];
         document.getElementById('asmaaMarquee').innerHTML = names.map(n => `<span class="god-name">${n}</span>`).join('✦') + names.map(n => `<span class="god-name">${n}</span>`).join('✦');
 
+        // بدء التطبيق
         initApp();
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
 </body>
-                </html>
+    </html>
