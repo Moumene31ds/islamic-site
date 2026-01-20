@@ -17,7 +17,7 @@
         /* المتغيرات الأساسية */
         :root {
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --card-bg: rgba(30, 41, 59, 0.75);
+            --card-bg: rgba(30, 41, 59, 0.85);
             --text-primary: #ffffff;
             --text-secondary: #cbd5e1;
             --accent-color: #ffd700;
@@ -27,7 +27,7 @@
         }
 
         body.fajr-mode { --bg-gradient: linear-gradient(135deg, #1a2980, #26d0ce); } 
-        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.8); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
+        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.9); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
         body.maghrib-mode { --bg-gradient: linear-gradient(135deg, #2c3e50, #fd746c); } 
         body.night-mode { --bg-gradient: linear-gradient(135deg, #0f172a 0%, #000000 100%); } 
 
@@ -177,12 +177,19 @@
             border: 1px solid rgba(255, 215, 0, 0.3); text-align: center; position: relative;
         }
         
-        /* كارد التذكير بالصيام */
+        /* كارد التذكير بالصيام - محسن */
         .fasting-card {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(0, 0, 0, 0.4) 100%);
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(6, 78, 59, 0.6) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.5);
             text-align: center;
-            display: none; /* يظهر فقط في أيام الصيام */
+            display: none; 
+            animation: fadeInDown 0.5s;
+        }
+
+        /* كارد الزكاة الجديد */
+        .zakat-card {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(69, 26, 3, 0.6) 100%);
+            border: 1px solid rgba(245, 158, 11, 0.4);
         }
 
         .ramadan-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; color: var(--accent-color); }
@@ -338,6 +345,7 @@
         }
         .progress-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin: 15px 0 5px 0; }
         .progress-bar-fill { height: 100%; background: var(--accent-color); border-radius: 3px; width: 0%; transition: width 0.5s; }
+        .khatma-plan-box { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; font-size: 0.85rem; margin-top: 10px; display: none; text-align: center; }
 
         .qiyam-info { display: flex; justify-content: space-around; margin-top: 15px; text-align: center; }
         .qiyam-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; min-width: 45%; border: 1px solid var(--border-color); }
@@ -346,6 +354,14 @@
         .playing-indicator { color: var(--accent-color); font-size: 0.8rem; margin-top: 5px; display: none; }
         
         .ayah-actions { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+
+        /* مدخلات الزكاة */
+        .zakat-input-group { margin-bottom: 10px; text-align: center; }
+        .zakat-label { font-size: 0.85rem; color: #ccc; margin-bottom: 5px; display: block; }
+        .zakat-result { 
+            background: rgba(0,0,0,0.3); padding: 10px; border-radius: 10px; 
+            margin-top: 10px; border: 1px solid var(--accent-color); display: none; 
+        }
     </style>
 </head>
 <body class="night-mode">
@@ -459,9 +475,9 @@
             </div>
         </div>
 
-        <div class="card fasting-card animate__animated animate__fadeIn" id="fastingCard">
-            <div style="display:flex; align-items:center; justify-content:center; gap:10px; color: #10b981;">
-                <i class="fas fa-hand-holding-heart"></i>
+        <div class="card fasting-card" id="fastingCard">
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; color: #fff;">
+                <i class="fas fa-hand-holding-heart" style="color: #ffd700;"></i>
                 <h3 style="margin:0; font-size:1rem;">تذكير بصيام السنة</h3>
             </div>
             <p id="fastingText" style="margin-top:10px; font-size:0.9rem; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.5);"></p>
@@ -520,6 +536,22 @@
             </div>
         </div>
 
+        <div class="card zakat-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size: 0.9rem; color: #fff;"><i class="fas fa-coins"></i> حاسبة الزكاة</h3>
+            </div>
+            <div class="zakat-input-group">
+                <label class="zakat-label">المبلغ المالي (المدخر منذ سنة)</label>
+                <input type="number" id="zakatAmount" class="khatma-input" placeholder="أدخل المبلغ هنا">
+            </div>
+            <button class="btn-small" style="width:100%; font-weight:bold;" onclick="calculateZakat()">احسب الزكاة</button>
+            <div id="zakatResult" class="zakat-result">
+                <div style="color:var(--accent-color); font-weight:bold; margin-bottom:5px;">قيمة الزكاة الواجبة:</div>
+                <div id="zakatValue" style="font-size:1.5rem; font-weight:bold;">0</div>
+                <div style="font-size:0.7rem; color:#ccc;">(نسبة 2.5% - ربع العشر)</div>
+            </div>
+        </div>
+
         <div class="card animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
             <span class="smart-adhkar-tag" id="adhkarType">ذكر عشوائي</span>
             <div class="adhkar-content">
@@ -569,18 +601,28 @@
 
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                <h3 style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-bookmark"></i> متابعة الختمة</h3>
+                <h3 style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-bookmark"></i> مخطط الختمة الذكي</h3>
             </div>
-            <div style="margin-bottom:15px; font-size:0.85rem; text-align:center; color:#ccc;">
-                احفظ آخر مكان وصلت إليه
+            
+            <div style="margin-bottom:10px;">
+                <label style="font-size:0.8rem; color:#ccc; display:block; margin-bottom:5px;">كم يوماً تريد للختمة؟</label>
+                <div style="display:flex; gap:10px;">
+                    <input type="number" id="targetDays" class="khatma-input" placeholder="عدد الأيام (مثلاً 30)">
+                    <button class="btn-small" style="margin-top:0;" onclick="calculateKhatmaPlan()">خطط لي</button>
+                </div>
+                <div id="khatmaPlanResult" class="khatma-plan-box"></div>
             </div>
-            <div class="khatma-grid">
-                <input type="number" id="khatmaSurah" class="khatma-input" placeholder="رقم السورة (1-114)" min="1" max="114">
-                <input type="number" id="khatmaAyah" class="khatma-input" placeholder="رقم الآية" min="1">
+
+            <div style="border-top:1px solid rgba(255,255,255,0.1); margin:15px 0; padding-top:15px;">
+                <div style="margin-bottom:5px; font-size:0.85rem; color:#ccc;">حفظ مكان الوصول يدوياً:</div>
+                <div class="khatma-grid">
+                    <input type="number" id="khatmaSurah" class="khatma-input" placeholder="رقم السورة" min="1" max="114">
+                    <input type="number" id="khatmaAyah" class="khatma-input" placeholder="رقم الآية" min="1">
+                </div>
+                <button class="btn-small" onclick="saveKhatma()" style="width:100%; margin-top:10px; background:var(--accent-color); color:#000; border:none; padding:10px; font-weight:bold;">حفظ الوصول</button>
+                <div class="progress-bar-bg"><div class="progress-bar-fill" id="khatmaProgress"></div></div>
+                <div style="text-align:center; font-size:0.8rem; color:#ccc;" id="khatmaStatus">لم تبدأ بعد</div>
             </div>
-            <button class="btn-small" onclick="saveKhatma()" style="width:100%; margin-top:10px; background:var(--accent-color); color:#000; border:none; padding:10px; font-weight:bold;">حفظ الوصول</button>
-            <div class="progress-bar-bg"><div class="progress-bar-fill" id="khatmaProgress"></div></div>
-            <div style="text-align:center; font-size:0.8rem; color:#ccc;" id="khatmaStatus">لم تبدأ بعد</div>
         </div>
 
         <div class="card" style="margin-top: 10px;">
@@ -688,11 +730,8 @@
         let chartInstance = null;
         let currentAyahData = null; 
 
-        // روابط الصوتيات الثابتة
+        // روابط الصوتيات
         const BASMALA_AUDIO = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
-        // تم تحديث الرابط لصدق الله العظيم
-        const SADAQALLAH_AUDIO = "https://server8.mp3quran.net/s_gmd/001.mp3"; // استخدام الفاتحة كسد فراغ مؤقت أو رابط بديل موثوق إذا وجد، لكن الأفضل:
-        // رابط بديل للصوت القصير "صدق الله العظيم"
         const SADAQALLAH_URL = "https://media.blubrry.com/muslim_central_quran/podcasts.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-000-sadaqallahul-azeem.mp3";
 
 
@@ -901,7 +940,7 @@
         }
 
         // ==========================================
-        // 4. الوظائف الأساسية للمواقيت (The Core)
+        // 4. الوظائف الأساسية للمواقيت
         // ==========================================
         function changeAdhanSound() {
             const select = document.getElementById('adhanSelector');
@@ -951,39 +990,59 @@
             });
             document.getElementById('hijriDisplay').innerText = formatter.format(date);
             
-            // --- ميزة جديدة: تذكير صيام السنة ---
+            // --- ميزة محسنة: تذكير صيام السنة (يظهر فقط في الوقت المناسب) ---
             checkSunnahFasting(date, formatter);
 
-            // التاريخ الميلادي (مع فرض الأرقام اللاتينية)
+            // التاريخ الميلادي
             const gregDate = new Date();
             document.getElementById('gregorianDisplay').innerText = gregDate.toLocaleDateString('ar-EG', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', numberingSystem: 'latn' 
             });
         }
 
+        // دالة الصيام الذكية (المحدثة)
         function checkSunnahFasting(dateObj, formatter) {
             // استخراج اليوم والشهر الهجري تقريبيا
             const parts = formatter.formatToParts(dateObj);
             const dayPart = parts.find(p => p.type === 'day').value;
             const dayNum = parseInt(dayPart);
-            const dayOfWeek = dateObj.getDay(); // 1 = Monday, 4 = Thursday
+            const dayOfWeek = dateObj.getDay(); // 0=Sunday, 1=Monday, ..., 4=Thursday
 
             const card = document.getElementById('fastingCard');
             const text = document.getElementById('fastingText');
             let message = "";
+            let showCard = false;
 
-            // الأيام البيض (13، 14، 15)
+            // 1. الأيام البيض (13، 14، 15)
+            // التذكير يظهر أيضاً ليلة اليوم الأبيض (يوم 12)
             if (dayNum >= 13 && dayNum <= 15) {
-                message = `اليوم ${dayNum} من الأيام البيض المستحب صيامها 🌕`;
-            }
-            // الاثنين والخميس
-            else if (dayOfWeek === 1) {
-                message = "اليوم الاثنين، تذكر صيام السنة 🌿";
-            } else if (dayOfWeek === 4) {
-                message = "اليوم الخميس، تذكر صيام السنة 🌿";
+                message = `اليوم ${dayNum} من الأيام البيض، تقبل الله صيامكم 🌕`;
+                showCard = true;
+            } else if (dayNum === 12) {
+                message = `غداً أول الأيام البيض، جهز نيتك للصيام 🌕`;
+                showCard = true;
             }
 
-            if(message) {
+            // 2. الاثنين والخميس
+            // إذا لم يكن هناك تذكير أيام بيض، نتحقق من الاثنين والخميس
+            if (!showCard) {
+                if (dayOfWeek === 1) { // الاثنين
+                    message = "اليوم الاثنين، يوم تعرض فيه الأعمال 🌿";
+                    showCard = true;
+                } else if (dayOfWeek === 4) { // الخميس
+                    message = "اليوم الخميس، تذكر صيام السنة 🌿";
+                    showCard = true;
+                } else if (dayOfWeek === 0) { // الأحد (تذكير للاثنين)
+                    message = "غداً الاثنين، لا تنس نية الصيام إن استطعت 🌙";
+                    showCard = true;
+                } else if (dayOfWeek === 3) { // الأربعاء (تذكير للخميس)
+                    message = "غداً الخميس، فرصة لصيام نافلة 🌙";
+                    showCard = true;
+                }
+            }
+
+            // إظهار أو إخفاء الكارد
+            if(showCard && message) {
                 card.style.display = 'block';
                 text.innerText = message;
             } else {
@@ -1045,7 +1104,6 @@
             const midnight = new Date(maghribTime.getTime() + (nightDuration / 2));
             const lastThird = new Date(maghribTime.getTime() + (nightDuration * (2/3)));
 
-            // تحديث الأوقات مع فرض الأرقام اللاتينية
             document.getElementById('midnightTime').innerText = midnight.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12: false, numberingSystem: 'latn'});
             document.getElementById('lastThirdTime').innerText = lastThird.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12: false, numberingSystem: 'latn'});
 
@@ -1088,7 +1146,6 @@
                 const isExtra = (p.n === 'الشروق' || p.n === 'الضحى');
                 const style = isExtra ? 'opacity:0.7; border: 1px dashed var(--border-color);' : '';
                 
-                // فرض الأرقام اللاتينية في عرض أوقات الصلاة
                 html += `
                 <div class="prayer-card ${isNext ? 'active' : ''}" style="${style}">
                     <div style="font-size:0.8rem; opacity:0.8">${p.n}</div>
@@ -1142,7 +1199,7 @@
         }
 
         // ==========================================
-        // 5. الأذكار والصوتيات (تم التحديث)
+        // 5. الأذكار والصوتيات
         // ==========================================
         
         let isAudioPlaying = false; 
@@ -1153,7 +1210,6 @@
             const player = document.getElementById('quranAudio');
             const indicator = document.getElementById('playingStatus');
             
-            // إيقاف التشغيل إذا كان يعمل حالياً
             if (!player.paused || isAudioPlaying) {
                 player.pause();
                 player.currentTime = 0;
@@ -1171,42 +1227,25 @@
                 icon.className = "fas fa-stop";
                 btnText.innerText = "إيقاف";
 
-                // 1. تشغيل البسملة
                 player.src = BASMALA_AUDIO;
-                
-                player.play().catch(e => { console.error("خطأ تشغيل البسملة", e); stopAudio(); });
+                player.play().catch(e => { console.error("خطأ", e); stopAudio(); });
 
                 player.onended = () => {
-                    // 2. تشغيل الآية
                     indicator.innerText = "جاري تلاوة الآية...";
                     player.src = ayahAudioUrl;
-                    player.play().catch(e => { console.error("خطأ تشغيل الآية", e); stopAudio(); });
+                    player.play().catch(e => { console.error("خطأ", e); stopAudio(); });
 
                     player.onended = () => {
-                        // 3. تشغيل صدق الله العظيم
-                        // ملاحظة: العديد من المصادر لا توفر ملف "صدق الله العظيم" منفصلاً بوضوح
-                        // لذا قمنا بإضافة رابط جديد
                         indicator.innerText = "صدق الله العظيم...";
                         player.src = SADAQALLAH_URL; 
-                        player.play().catch(e => { 
-                            console.warn("لم يتم العثور على ملف صدق الله العظيم، إنهاء."); 
-                            stopAudio(); 
-                        });
-
-                        player.onended = () => {
-                            stopAudio();
-                        };
-                        
-                        player.onerror = () => {
-                            // في حال فشل رابط صدق الله العظيم، ننهي التشغيل بصمت
-                            stopAudio();
-                        }
+                        player.play().catch(e => { stopAudio(); });
+                        player.onended = () => { stopAudio(); };
+                        player.onerror = () => { stopAudio(); }
                     };
                 };
                 
                 player.onerror = (e) => {
-                    console.error("خطأ في مشغل الصوت", e);
-                    alert("تعذر تشغيل الملف الصوتي. تأكد من الاتصال بالإنترنت.");
+                    alert("تعذر تشغيل الملف الصوتي.");
                     stopAudio();
                 };
             } else {
@@ -1253,18 +1292,13 @@
         }
 
         async function fetchAyah() {
-            // إيقاف الصوت القديم إذا كان يعمل عند طلب آية جديدة
             stopAudio();
-
             const container = document.getElementById('ayahContainer');
             container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i> <br><span style="font-size:0.8rem">جاري التحميل...</span>';
             
             try {
-                // إضافة timestamp لمنع التخزين المؤقت (Caching)
                 const res = await fetch(`https://api.alquran.cloud/v1/ayah/random/ar.alafasy?t=${new Date().getTime()}`);
-                
-                if (!res.ok) throw new Error("فشل الاتصال بالخادم");
-                
+                if (!res.ok) throw new Error("فشل الاتصال");
                 const d = await res.json();
                 
                 if(d.code === 200) {
@@ -1274,15 +1308,9 @@
                         <div class="adhkar-text animate__animated animate__fadeIn">"${d.data.text}"</div>
                         <div style="font-size:0.8rem; color:var(--accent-color);">سورة ${d.data.surah.name} - آية ${d.data.numberInSurah}</div>
                     `;
-                } else {
-                    throw new Error("بيانات غير صحيحة");
                 }
             } catch(e) { 
-                console.error(e);
-                container.innerHTML = `
-                    <div class="adhkar-text" style="color:#ff6b6b">تعذر جلب الآية</div>
-                    <button onclick="fetchAyah()" class="btn-small">حاول مرة أخرى</button>
-                `; 
+                container.innerHTML = `<button onclick="fetchAyah()" class="btn-small">حاول مرة أخرى</button>`; 
             }
         }
 
@@ -1293,11 +1321,11 @@
                     text: `"${currentAyahData.text}" \n سورة ${currentAyahData.surah.name} - آية ${currentAyahData.numberInSurah}`,
                 }).catch(console.error);
             } else {
-                alert("المشاركة غير مدعومة في هذا المتصفح أو لم يتم تحميل الآية بعد.");
+                alert("المشاركة غير مدعومة");
             }
         }
 
-        // --- المسبحة والمسبحة الصوتية ---
+        // --- المسبحة ---
         let tCount = parseInt(localStorage.getItem('tasbihCount')) || 0;
         const ringElem = document.getElementById('tasbihRingElem');
         document.getElementById('tasbihCounter').innerText = tCount;
@@ -1316,7 +1344,7 @@
         let isListening = false;
         function toggleVoiceTasbih() {
             if(!('webkitSpeechRecognition' in window)) {
-                alert("المتصفح لا يدعم الميزة الصوتية (جرب Chrome)");
+                alert("الميزة الصوتية غير مدعومة في هذا المتصفح");
                 return;
             }
             const btn = document.getElementById('micBtn');
@@ -1342,7 +1370,7 @@
                 const transcript = event.results[last][0].transcript.trim();
                 if(transcript.includes('الله') || transcript.includes('سبحان') || transcript.includes('أكبر')) {
                     incrementTasbih();
-                    status.innerText = "✨ تم الاحتساب: " + transcript;
+                    status.innerText = "✨ تم الاحتساب";
                 }
             };
             recognition.onerror = () => {
@@ -1364,20 +1392,38 @@
         function analyzeMood(mood) {
             const data = moodData[mood];
             const box = document.getElementById('moodRemedy');
-            
             document.querySelectorAll('.mood-item').forEach(i => i.classList.remove('active'));
             event.currentTarget.classList.add('active');
-
             box.style.display = 'block';
             box.classList.remove('animate__fadeIn');
             void box.offsetWidth; 
             box.classList.add('animate__fadeIn');
-
             document.getElementById('remedyText').innerHTML = `"${data.t}"<br><br><span style="color:white; font-size:0.9rem">💡 دعاء مقترح: ${data.d}</span>`;
             document.getElementById('remedySource').innerText = data.s;
         }
 
-        // --- حفظ الختمة ---
+        // --- ميزة جديدة: مخطط الختمة الذكي ---
+        function calculateKhatmaPlan() {
+            const days = parseInt(document.getElementById('targetDays').value);
+            const resBox = document.getElementById('khatmaPlanResult');
+            
+            if(!days || days <= 0) {
+                alert("الرجاء إدخال عدد أيام صحيح");
+                return;
+            }
+
+            const totalPages = 604;
+            const pagesPerDay = Math.ceil(totalPages / days);
+            const part = (20 / pagesPerDay).toFixed(1); // كم جزء يومياً تقريباً
+
+            resBox.style.display = 'block';
+            resBox.innerHTML = `
+                <div style="color:var(--accent-color); font-weight:bold; margin-bottom:5px;">خطتك المقترحة 📖</div>
+                عليك قراءة <span style="font-size:1.2rem; font-weight:bold;">${pagesPerDay}</span> صفحة يومياً<br>
+                <span style="font-size:0.75rem; color:#ccc;">لإنهاء القرآن كاملاً في ${days} يوم</span>
+            `;
+        }
+
         function saveKhatma() {
             const surah = document.getElementById('khatmaSurah').value;
             const ayah = document.getElementById('khatmaAyah').value;
@@ -1402,6 +1448,27 @@
             const percent = (surah / 114) * 100;
             document.getElementById('khatmaProgress').style.width = percent + '%';
             document.getElementById('khatmaStatus').innerText = `آخر وصول: سورة ${surah} - آية ${ayah}`;
+        }
+
+        // --- ميزة جديدة: حاسبة الزكاة ---
+        function calculateZakat() {
+            const amount = parseFloat(document.getElementById('zakatAmount').value);
+            const resultBox = document.getElementById('zakatResult');
+            const resultValue = document.getElementById('zakatValue');
+            
+            if (!amount || amount <= 0) {
+                alert("الرجاء إدخال مبلغ صحيح");
+                return;
+            }
+
+            // حساب 2.5%
+            const zakat = amount * 0.025;
+            
+            resultBox.style.display = 'block';
+            resultBox.classList.add('animate__animated', 'animate__flipInX');
+            
+            // تنسيق الرقم مع فواصل
+            resultValue.innerText = zakat.toLocaleString('en-US', {maximumFractionDigits: 2});
         }
 
         // --- تحليلات العبادة (Charts) ---
@@ -1443,7 +1510,6 @@
         const marqueeHTML = names99.map(n => `<span class="god-name">${n}</span>`).join('✦') + names99.map(n => `<span class="god-name">${n}</span>`).join('✦');
         document.getElementById('asmaaMarquee').innerHTML = marqueeHTML;
 
-        // بدء التطبيق
         initApp();
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
