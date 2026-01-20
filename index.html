@@ -360,10 +360,10 @@
         
         .khatma-input { 
             flex: 1; 
-            background: rgba(255,255,255,0.95); /* خلفية بيضاء تقريباً */
+            background: rgba(255,255,255,0.95); 
             border: 2px solid var(--border-color); 
             padding: 10px; border-radius: 10px; 
-            color: #000000 !important; /* لون أسود إجباري */
+            color: #000000 !important; 
             text-align: center; outline: none; 
             font-weight: bold; font-size: 1.1rem;
         }
@@ -407,7 +407,7 @@
 
         .moon-icon { font-size: 1.2rem; margin-left: 5px; color: #fff; }
 
-        /* --- تنسيق الإشعارات والأوسمة (جديد) --- */
+        /* --- تنسيق الإشعارات والأوسمة --- */
         .notification-btn {
             background: rgba(255,255,255,0.1); border: 1px solid var(--accent-color);
             color: var(--accent-color); padding: 8px 12px; border-radius: 20px;
@@ -445,6 +445,52 @@
         .event-name { font-size: 0.9rem; font-weight: bold; color: #fff; }
         .event-date { font-size: 0.8rem; color: var(--accent-color); font-family: 'Arial'; }
         .event-days { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 10px; }
+
+        /* --- تصميم نافذة الإعدادات (جديد) --- */
+        .settings-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 5000;
+            backdrop-filter: blur(10px);
+            display: none; justify-content: center; align-items: flex-end;
+            animation: fadeIn 0.3s;
+        }
+        .settings-panel {
+            width: 100%; max-width: 600px;
+            background: #1e293b; 
+            border-top-left-radius: 30px; border-top-right-radius: 30px;
+            border-top: 2px solid var(--accent-color);
+            padding: 30px 20px;
+            max-height: 85vh; overflow-y: auto;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .settings-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+        .settings-title { font-size: 1.4rem; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .close-settings { background: rgba(255,255,255,0.1); border: none; width: 35px; height: 35px; border-radius: 50%; color: #fff; cursor: pointer; }
+
+        .setting-section { margin-bottom: 25px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 15px; }
+        .setting-label { display: block; color: var(--accent-color); font-weight: bold; margin-bottom: 10px; font-size: 0.95rem; }
+
+        /* خيارات الألوان */
+        .colors-grid { display: flex; gap: 15px; justify-content: center; margin-top: 10px; }
+        .color-swatch { 
+            width: 45px; height: 45px; border-radius: 50%; cursor: pointer; 
+            border: 2px solid transparent; transition: 0.3s; position: relative;
+        }
+        .color-swatch.active { border-color: #fff; transform: scale(1.1); box-shadow: 0 0 15px currentColor; }
+        .color-swatch::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; }
+        .color-swatch.active::after { opacity: 1; }
+
+        /* القوائم المنسدلة المحسنة */
+        .custom-select {
+            width: 100%; padding: 12px; border-radius: 12px;
+            background: rgba(255,255,255,0.05); color: #fff;
+            border: 1px solid rgba(255,255,255,0.1);
+            outline: none; font-family: 'Tajawal'; font-size: 1rem;
+        }
+        .custom-select option { background: #1e293b; color: #fff; }
     </style>
 </head>
 <body class="night-mode">
@@ -543,6 +589,7 @@
             <div class="header-actions">
                 <button class="btn-icon" onclick="resetLocationData()" title="تغيير الموقع"><i class="fas fa-map-marker-alt"></i></button>
                 <button class="btn-icon" onclick="openQibla()" title="القبلة"><i class="fas fa-compass"></i></button>
+                <button class="btn-icon" onclick="openSettings()" title="الإعدادات"><i class="fas fa-cog"></i></button>
             </div>
         </header>
 
@@ -601,13 +648,13 @@
                 </div>
             </div>
 
-            <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1);">
-                <label style="font-size:0.8rem; color:var(--text-secondary);">🔊 صوت الأذان:</label>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); display: none;">
                 <select id="adhanSelector" class="audio-select" onchange="changeAdhanSound()">
                     <option value="makkah">مكة المكرمة</option>
                     <option value="madina">المدينة المنورة</option>
                     <option value="alafasy">مشاري العفاسي</option>
                     <option value="alaqsa">المسجد الأقصى</option>
+                    <option value="egypt">الأذان المصري</option>
                 </select>
             </div>
         </div>
@@ -782,6 +829,48 @@
 
     </div>
 
+    <div class="settings-overlay" id="settingsModal">
+        <div class="settings-panel">
+            <div class="settings-header">
+                <div class="settings-title"><i class="fas fa-sliders-h"></i> الإعدادات والتخصيص</div>
+                <button class="close-settings" onclick="closeSettings()"><i class="fas fa-times"></i></button>
+            </div>
+
+            <div class="setting-section">
+                <label class="setting-label"><i class="fas fa-volume-up"></i> صوت الأذان</label>
+                <select id="settingsAdhan" class="custom-select" onchange="saveSettings()">
+                    <option value="makkah">مكة المكرمة</option>
+                    <option value="madina">المدينة المنورة</option>
+                    <option value="alafasy">مشاري العفاسي</option>
+                    <option value="alaqsa">المسجد الأقصى</option>
+                    <option value="egypt">الأذان المصري</option>
+                </select>
+            </div>
+
+            <div class="setting-section">
+                <label class="setting-label"><i class="fas fa-quran"></i> قارئ الورد القرآني</label>
+                <select id="settingsReciter" class="custom-select" onchange="saveSettings()">
+                    <option value="ar.alafasy">مشاري العفاسي</option>
+                    <option value="ar.abdulbasit">عبدالباسط عبدالصمد</option>
+                    <option value="ar.sudais">عبدالرحمن السديس</option>
+                    <option value="ar.shuraim">سعود الشريم</option>
+                    <option value="ar.mahermuaiqly">ماهر المعيقلي</option>
+                    <option value="ar.minshawi">محمد صديق المنشاوي</option>
+                </select>
+            </div>
+
+            <div class="setting-section">
+                <label class="setting-label"><i class="fas fa-palette"></i> لون التطبيق (الثيم)</label>
+                <div class="colors-grid">
+                    <div class="color-swatch active" style="background: #ffd700; color: #ffd700;" onclick="changeThemeColor('#ffd700', this)"></div> <div class="color-swatch" style="background: #10b981; color: #10b981;" onclick="changeThemeColor('#10b981', this)"></div> <div class="color-swatch" style="background: #3b82f6; color: #3b82f6;" onclick="changeThemeColor('#3b82f6', this)"></div> <div class="color-swatch" style="background: #f43f5e; color: #f43f5e;" onclick="changeThemeColor('#f43f5e', this)"></div> <div class="color-swatch" style="background: #8b5cf6; color: #8b5cf6;" onclick="changeThemeColor('#8b5cf6', this)"></div> </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: #64748b;">
+                الإصدار 2.0 | الميقات برو
+            </div>
+        </div>
+    </div>
+
     <div class="marquee-container">
         <div class="marquee-content" id="asmaaMarquee"></div>
     </div>
@@ -844,21 +933,21 @@
         let currentAyahData = null; 
         const BASMALA_AUDIO = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
         const SADAQALLAH_URL = "https://media.blubrry.com/muslim_central_quran/podcasts.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-000-sadaqallahul-azeem.mp3";
+        
+        // متغيرات الإعدادات (جديد)
+        let currentReciter = 'ar.alafasy';
+        let currentThemeColor = '#ffd700';
 
         async function initApp() {
+            loadSettings(); // تحميل الإعدادات
+
             const savedOffset = localStorage.getItem('miqat_hijri_offset');
             if(savedOffset) hijriOffset = parseInt(savedOffset);
 
-            const savedAdhan = localStorage.getItem('miqat_adhan_sound');
-            if(savedAdhan) {
-                document.getElementById('adhanSelector').value = savedAdhan;
-                changeAdhanSound();
-            }
-
             loadKhatma();
-            initQadaCounter(); // تهيئة عداد الفوائت
-            getUpcomingEvents(); // تهيئة المناسبات
-            updateNotifyBtn(); // التحقق من حالة الإشعارات
+            initQadaCounter(); 
+            getUpcomingEvents(); 
+            updateNotifyBtn(); 
 
             const savedLoc = localStorage.getItem('miqat_location');
             if (savedLoc) {
@@ -1052,16 +1141,12 @@
         // 4. المواقيت والهجري
         // ==========================================
         function changeAdhanSound() {
+            // يتم التحكم به الآن عبر saveSettings ولكن هذا موجود للتوافق
             const select = document.getElementById('adhanSelector');
-            const audio = document.getElementById('adhanAudio');
-            const sounds = {
-                'makkah': 'https://cdn.islamic.network/adhan/makkah.mp3',
-                'madina': 'https://cdn.islamic.network/adhan/madina.mp3',
-                'alafasy': 'https://cdn.islamic.network/adhan/alafasy.mp3',
-                'alaqsa': 'https://www.islamcan.com/audio/adhan/alaqsa.mp3'
-            };
-            audio.src = sounds[select.value];
-            localStorage.setItem('miqat_adhan_sound', select.value);
+            if(select) {
+               document.getElementById('settingsAdhan').value = select.value;
+               saveSettings();
+            }
         }
 
         function updateRamadanCountdown() {
@@ -1414,7 +1499,8 @@
             container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i> <br><span style="font-size:0.8rem">جاري التحميل...</span>';
             
             try {
-                const res = await fetch(`https://api.alquran.cloud/v1/ayah/random/ar.alafasy?t=${new Date().getTime()}`);
+                // استخدام القارئ المحدد من الإعدادات
+                const res = await fetch(`https://api.alquran.cloud/v1/ayah/random/${currentReciter}?t=${new Date().getTime()}`);
                 if (!res.ok) throw new Error("فشل الاتصال");
                 const d = await res.json();
                 
@@ -1731,6 +1817,87 @@
             list.innerHTML = html;
         }
 
+        // ==========================================
+        // 8. منطق صفحة الإعدادات (جديد)
+        // ==========================================
+
+        function openSettings() {
+            document.getElementById('settingsModal').style.display = 'flex';
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+
+        function saveSettings() {
+            // 1. الأذان
+            const adhanVal = document.getElementById('settingsAdhan').value;
+            localStorage.setItem('miqat_adhan_sound', adhanVal);
+            
+            const sounds = {
+                'makkah': 'https://cdn.islamic.network/adhan/makkah.mp3',
+                'madina': 'https://cdn.islamic.network/adhan/madina.mp3',
+                'alafasy': 'https://cdn.islamic.network/adhan/alafasy.mp3',
+                'alaqsa': 'https://www.islamcan.com/audio/adhan/alaqsa.mp3',
+                'egypt': 'https://www.islamcan.com/audio/adhan/egypt.mp3'
+            };
+            document.getElementById('adhanAudio').src = sounds[adhanVal];
+
+            // 2. القارئ
+            currentReciter = document.getElementById('settingsReciter').value;
+            localStorage.setItem('miqat_reciter', currentReciter);
+            
+            // إعادة تحميل آية جديدة بالقارئ الجديد
+            fetchAyah();
+        }
+
+        function changeThemeColor(color, element) {
+            document.documentElement.style.setProperty('--accent-color', color);
+            document.documentElement.style.setProperty('--accent-glow', color + '80'); 
+            
+            document.querySelectorAll('.color-swatch').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+
+            localStorage.setItem('miqat_theme_color', color);
+        }
+
+        function loadSettings() {
+            // تحميل الأذان
+            const savedAdhan = localStorage.getItem('miqat_adhan_sound');
+            if(savedAdhan) {
+                document.getElementById('settingsAdhan').value = savedAdhan;
+                const sounds = {
+                    'makkah': 'https://cdn.islamic.network/adhan/makkah.mp3',
+                    'madina': 'https://cdn.islamic.network/adhan/madina.mp3',
+                    'alafasy': 'https://cdn.islamic.network/adhan/alafasy.mp3',
+                    'alaqsa': 'https://www.islamcan.com/audio/adhan/alaqsa.mp3',
+                    'egypt': 'https://www.islamcan.com/audio/adhan/egypt.mp3'
+                };
+                if(sounds[savedAdhan]) document.getElementById('adhanAudio').src = sounds[savedAdhan];
+            }
+
+            // تحميل القارئ
+            const savedReciter = localStorage.getItem('miqat_reciter');
+            if(savedReciter) {
+                currentReciter = savedReciter;
+                document.getElementById('settingsReciter').value = savedReciter;
+            }
+
+            // تحميل اللون
+            const savedColor = localStorage.getItem('miqat_theme_color');
+            if(savedColor) {
+                document.documentElement.style.setProperty('--accent-color', savedColor);
+                document.documentElement.style.setProperty('--accent-glow', savedColor + '80');
+                
+                document.querySelectorAll('.color-swatch').forEach(el => {
+                    el.classList.remove('active');
+                    if(el.style.color === savedColor || el.getAttribute('style').includes(savedColor)) {
+                        el.classList.add('active');
+                    }
+                });
+            }
+        }
+
         // تشغيل المؤثرات والتهيئة
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
         
@@ -1745,4 +1912,4 @@
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
 </body>
-    </html>
+                </html>
