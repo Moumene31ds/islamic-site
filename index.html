@@ -6,7 +6,7 @@
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
-    <title>الميقات برو | الإصدار المصحح</title>
+    <title>الميقات برو | الإصدار الشامل</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -266,7 +266,7 @@
             padding: 10px 0; border-top: 1px solid var(--border-color); 
             z-index: 100; white-space: nowrap; overflow: hidden; 
         }
-        .marquee-content { display: inline-block; animation: marquee 80s linear infinite; }
+        .marquee-content { display: inline-block; animation: marquee 300s linear infinite; } /* إبطاء الحركة لاستيعاب 99 اسم */
         .god-name { display: inline-block; margin: 0 25px; font-family: 'Amiri'; color: var(--accent-color); font-size: 1.1rem; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(100%); } }
 
@@ -280,7 +280,7 @@
         }
         .btn-small:hover { background: var(--accent-color); color: #000; }
 
-        /* تنسيقات طبيب القلوب (جديد) */
+        /* تنسيقات طبيب القلوب */
         .mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
         .mood-item {
             background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
@@ -301,6 +301,20 @@
             display: flex; align-items: center; justify-content: center; margin: 0 auto 10px auto; transition: 0.3s;
         }
         .mic-btn.listening { background: #ef4444; color: white; animation: pulse 1.5s infinite; border-color: #ef4444; }
+
+        /* تنسيقات الختمة (جديد) */
+        .khatma-grid { display: flex; gap: 10px; margin-top: 10px; }
+        .khatma-input { 
+            flex: 1; background: rgba(255,255,255,0.1); border: 1px solid var(--border-color); 
+            padding: 10px; border-radius: 10px; color: white; text-align: center; outline: none; 
+        }
+        .progress-bar-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; margin: 15px 0 5px 0; }
+        .progress-bar-fill { height: 100%; background: var(--accent-color); border-radius: 3px; width: 0%; transition: width 0.5s; }
+
+        /* تنسيقات قيام الليل (جديد) */
+        .qiyam-info { display: flex; justify-content: space-around; margin-top: 15px; text-align: center; }
+        .qiyam-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; min-width: 45%; border: 1px solid var(--border-color); }
+        .qiyam-time { font-family: 'Arial'; font-weight: bold; font-size: 1.1rem; color: var(--accent-color); margin-top: 5px; }
 
     </style>
 </head>
@@ -450,6 +464,22 @@
 
         <div class="prayer-strip" id="prayerStrip"></div>
 
+        <div class="card">
+            <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 10px;">
+                <i class="fas fa-moon"></i> أوقات قيام الليل
+            </h3>
+            <div class="qiyam-info">
+                <div class="qiyam-box">
+                    <div style="font-size:0.8rem; opacity:0.8">منتصف الليل</div>
+                    <div class="qiyam-time" id="midnightTime">--:--</div>
+                </div>
+                <div class="qiyam-box">
+                    <div style="font-size:0.8rem; opacity:0.8">الثلث الأخير</div>
+                    <div class="qiyam-time" id="lastThirdTime">--:--</div>
+                </div>
+            </div>
+        </div>
+
         <div class="card animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
             <span class="smart-adhkar-tag" id="adhkarType">ذكر عشوائي</span>
             <div class="adhkar-content">
@@ -495,6 +525,22 @@
             <div style="height: 150px;">
                 <canvas id="prayerChart"></canvas>
             </div>
+        </div>
+
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h3 style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-bookmark"></i> متابعة الختمة</h3>
+            </div>
+            <div style="margin-bottom:15px; font-size:0.85rem; text-align:center; color:#ccc;">
+                احفظ آخر مكان وصلت إليه
+            </div>
+            <div class="khatma-grid">
+                <input type="number" id="khatmaSurah" class="khatma-input" placeholder="رقم السورة (1-114)" min="1" max="114">
+                <input type="number" id="khatmaAyah" class="khatma-input" placeholder="رقم الآية" min="1">
+            </div>
+            <button class="btn-small" onclick="saveKhatma()" style="width:100%; margin-top:10px; background:var(--accent-color); color:#000; border:none; padding:10px; font-weight:bold;">حفظ الوصول</button>
+            <div class="progress-bar-bg"><div class="progress-bar-fill" id="khatmaProgress"></div></div>
+            <div style="text-align:center; font-size:0.8rem; color:#ccc;" id="khatmaStatus">لم تبدأ بعد</div>
         </div>
 
         <div class="card" style="margin-top: 10px;">
@@ -600,6 +646,9 @@
                 document.getElementById('adhanSelector').value = savedAdhan;
                 changeAdhanSound();
             }
+
+            // تحميل الختمة
+            loadKhatma();
 
             // استرجاع الموقع وطريقة الحساب المحفوظة
             const savedLoc = localStorage.getItem('miqat_location');
@@ -733,8 +782,6 @@
                         initializeLeafletMap(lat, lon);
                         stageLocation(lat, lon, cityName, place.display_name);
                         list.style.display = 'none';
-                        // محاولة استخراج كود الدولة من الاسم إذا لم يتوفر مباشرة (تبسيط)
-                        // يفضل هنا استخدام reverse geocoding مرة أخرى للدقة
                         getAddressFromCoords(lat, lon);
                     };
                     list.appendChild(li);
@@ -814,7 +861,6 @@
         function updateRamadanCountdown() {
             const now = new Date();
             const currentYear = now.getFullYear();
-            // تاريخ تقريبي لرمضان (يمكن تحديثه سنوياً أو جلبه بAPI)
             let ramadanDate = new Date(`February 28, ${currentYear}`); 
             if (now > ramadanDate) ramadanDate = new Date(`February 17, ${currentYear + 1}`); 
             
@@ -870,7 +916,6 @@
             if(!coords) return;
             const date = new Date();
             
-            // تحديد طريقة الحساب بناءً على اختيار المستخدم
             let params;
             if (adhan.CalculationMethod[calculationMethod]) {
                 params = adhan.CalculationMethod[calculationMethod]();
@@ -878,7 +923,7 @@
                 params = adhan.CalculationMethod.MuslimWorldLeague();
             }
             
-            params.madhab = adhan.Madhab.Shafi; // الافتراضي شافعي (جمهور العلماء)
+            params.madhab = adhan.Madhab.Shafi; 
             
             const times = new adhan.PrayerTimes(coords, date, params);
             const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate()+1);
@@ -890,6 +935,21 @@
             else if (date < times.maghrib) body.classList.add('sun-mode');
             else if (date < times.isha) body.classList.add('maghrib-mode');
             else body.classList.add('night-mode');
+
+            // --- منطق حساب الثلث الأخير ومنتصف الليل (إضافة جديدة) ---
+            // الليل الشرعي يبدأ من المغرب وينتهي عند الفجر
+            const maghribTime = times.maghrib;
+            const fajrTomorrow = timesTomorrow.fajr;
+            const nightDuration = fajrTomorrow.getTime() - maghribTime.getTime();
+            
+            // منتصف الليل = المغرب + نصف مدة الليل
+            const midnight = new Date(maghribTime.getTime() + (nightDuration / 2));
+            // الثلث الأخير = المغرب + ثلثي مدة الليل (أو الفجر - ثلث الليل)
+            const lastThird = new Date(maghribTime.getTime() + (nightDuration * (2/3)));
+
+            document.getElementById('midnightTime').innerText = midnight.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12: false});
+            document.getElementById('lastThirdTime').innerText = lastThird.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12: false});
+            // -----------------------------------------------------------
 
             const pList = [
                 {n:'الفجر', t:times.fajr}, {n:'الشروق', t:times.sunrise}, {n:'الظهر', t:times.dhuhr}, 
@@ -1115,6 +1175,33 @@
             document.getElementById('remedySource').innerText = data.s;
         }
 
+        // --- حفظ الختمة (ميزة جديدة) ---
+        function saveKhatma() {
+            const surah = document.getElementById('khatmaSurah').value;
+            const ayah = document.getElementById('khatmaAyah').value;
+            if(surah && ayah) {
+                localStorage.setItem('khatma_progress', JSON.stringify({s: surah, a: ayah}));
+                updateKhatmaUI(surah, ayah);
+                alert("تم حفظ التقدم!");
+            }
+        }
+
+        function loadKhatma() {
+            const saved = localStorage.getItem('khatma_progress');
+            if(saved) {
+                const data = JSON.parse(saved);
+                document.getElementById('khatmaSurah').value = data.s;
+                document.getElementById('khatmaAyah').value = data.a;
+                updateKhatmaUI(data.s, data.a);
+            }
+        }
+
+        function updateKhatmaUI(surah, ayah) {
+            const percent = (surah / 114) * 100;
+            document.getElementById('khatmaProgress').style.width = percent + '%';
+            document.getElementById('khatmaStatus').innerText = `آخر وصول: سورة ${surah} - آية ${ayah}`;
+        }
+
         // --- تحليلات العبادة (Charts) ---
         function initChart() {
             const ctx = document.getElementById('prayerChart').getContext('2d');
@@ -1147,12 +1234,19 @@
 
         // تشغيل الخلفية والنصوص المتحركة
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
-        const names = ["الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر"];
-        document.getElementById('asmaaMarquee').innerHTML = names.map(n => `<span class="god-name">${n}</span>`).join('✦') + names.map(n => `<span class="god-name">${n}</span>`).join('✦');
+        
+        // القائمة الكاملة لأسماء الله الحسنى (99 اسم)
+        const names99 = [
+            "الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر", "الخالق", "البارئ", "المصور", "الغفار", "القهار", "الوهاب", "الرزاق", "الفتاح", "العليم", "القابض", "الباسط", "الخافض", "الرافع", "المعز", "المذل", "السميع", "البصير", "الحكيم", "العدل", "اللطيف", "الخبير", "الحليم", "العظيم", "الغفور", "الشكور", "العلي", "الكبير", "الحفيظ", "المقيت", "الحسيب", "الجليل", "الكريم", "الرقيب", "المجيب", "الواسع", "الحكيم", "الودود", "المجيد", "الباعث", "الشهيد", "الحق", "الوكيل", "القوي", "المتين", "الولي", "الحميد", "المحصي", "المبدئ", "المعيد", "المحيي", "المميت", "الحي", "القيوم", "الواجد", "الماجد", "الواحد", "الأحد", "الصمد", "القادر", "المقتدر", "المقدم", "المؤخر", "الأول", "الآخر", "الظاهر", "الباطن", "الوالي", "المتعالي", "البر", "التواب", "المنتقم", "العفو", "الرؤوف", "مالك الملك", "ذو الجلال والإكرام", "المقسط", "الجامع", "الغني", "المغني", "المانع", "الضار", "النافع", "النور", "الهادي", "البديع", "الباقي", "الوارث", "الرشيد", "الصبور"
+        ];
+        
+        // تكرار الأسماء للشريط المتحرك
+        const marqueeHTML = names99.map(n => `<span class="god-name">${n}</span>`).join('✦') + names99.map(n => `<span class="god-name">${n}</span>`).join('✦');
+        document.getElementById('asmaaMarquee').innerHTML = marqueeHTML;
 
         // بدء التطبيق
         initApp();
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
 </body>
-</html>
+    </html>
