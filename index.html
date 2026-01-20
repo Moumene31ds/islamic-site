@@ -6,7 +6,7 @@
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
-    <title>الميقات برو | الإصدار الذهبي</title>
+    <title>الميقات برو | الإصدار المطور</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -358,7 +358,6 @@
 
         .khatma-grid { display: flex; gap: 10px; margin-top: 10px; }
         
-        /* --- تعديل لون مدخلات الختمة للأرقام السوداء --- */
         .khatma-input { 
             flex: 1; 
             background: rgba(255,255,255,0.95); /* خلفية بيضاء تقريباً */
@@ -407,6 +406,45 @@
         .qada-btn.sub { background: rgba(239, 68, 68, 0.4); }
 
         .moon-icon { font-size: 1.2rem; margin-left: 5px; color: #fff; }
+
+        /* --- تنسيق الإشعارات والأوسمة (جديد) --- */
+        .notification-btn {
+            background: rgba(255,255,255,0.1); border: 1px solid var(--accent-color);
+            color: var(--accent-color); padding: 8px 12px; border-radius: 20px;
+            cursor: pointer; font-size: 0.8rem; z-index: 20;
+            transition: 0.3s;
+            margin-bottom: 10px;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .notification-btn.active { background: var(--accent-color); color: #000; }
+
+        .badges-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px;
+        }
+        .badge-item {
+            background: rgba(0,0,0,0.4); border-radius: 15px; padding: 10px;
+            text-align: center; border: 1px solid rgba(255,255,255,0.05);
+            filter: grayscale(100%); opacity: 0.6; transition: 0.4s;
+            position: relative; overflow: hidden;
+        }
+        .badge-item.unlocked {
+            filter: grayscale(0%); opacity: 1;
+            border-color: var(--accent-color);
+            background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(0,0,0,0.5));
+            box-shadow: 0 0 15px rgba(255,215,0,0.1);
+        }
+        .badge-icon { font-size: 1.8rem; margin-bottom: 5px; display: block; }
+        .badge-name { font-size: 0.7rem; font-weight: bold; color: #fff; }
+        .badge-desc { font-size: 0.6rem; color: #aaa; margin-top: 3px; }
+
+        /* --- تنسيق المناسبات --- */
+        .event-row {
+            display: flex; justify-content: space-between; padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05); align-items: center;
+        }
+        .event-name { font-size: 0.9rem; font-weight: bold; color: #fff; }
+        .event-date { font-size: 0.8rem; color: var(--accent-color); font-family: 'Arial'; }
+        .event-days { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 10px; }
     </style>
 </head>
 <body class="night-mode">
@@ -507,6 +545,12 @@
                 <button class="btn-icon" onclick="openQibla()" title="القبلة"><i class="fas fa-compass"></i></button>
             </div>
         </header>
+
+        <div style="text-align: left;">
+            <button id="notifyBtn" class="notification-btn" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i> تفعيل التنبيهات
+            </button>
+        </div>
 
         <div class="card ramadan-card animate__animated animate__flipInX">
             <i class="fas fa-mosque lantern-deco" style="position:absolute; top:-10px; left:20px; font-size:3rem; opacity:0.1;"></i>
@@ -646,6 +690,21 @@
                 <div id="remedyText" class="adhkar-text"></div>
                 <div id="remedySource" style="font-size: 0.8rem; color: var(--accent-color);"></div>
             </div>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 10px;">
+                <i class="fas fa-medal"></i> إنجازاتي (أوسمة)
+            </h3>
+            <div class="badges-grid" id="badgesContainer">
+                </div>
+        </div>
+
+        <div class="card">
+            <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 10px;">
+                <i class="fas fa-calendar-alt"></i> مناسبات إسلامية قادمة
+            </h3>
+            <div id="eventsContainer"></div>
         </div>
 
         <div class="card">
@@ -798,6 +857,8 @@
 
             loadKhatma();
             initQadaCounter(); // تهيئة عداد الفوائت
+            getUpcomingEvents(); // تهيئة المناسبات
+            updateNotifyBtn(); // التحقق من حالة الإشعارات
 
             const savedLoc = localStorage.getItem('miqat_location');
             if (savedLoc) {
@@ -1088,7 +1149,7 @@
         }
 
         // ==========================================
-        // 5. القبلة المحسنة (New Qibla Logic)
+        // 5. القبلة المحسنة
         // ==========================================
         function openQibla() {
             document.getElementById('qiblaModal').style.display = 'flex';
@@ -1110,22 +1171,13 @@
             const qibla = adhan.Qibla(coords);
             let alpha = e.webkitCompassHeading || e.alpha;
             
-            // في أندرويد alpha أحيانا يكون معكوساً أو يحتاج تصحيح، لكن سنعتمد الأساسي
-            // تدوير البوصلة لتعكس حركة الهاتف
             document.getElementById('compassRing').style.transform = `rotate(${-alpha}deg)`;
             
-            // تدوير الكعبة لتبقى مشيرة للقبلة داخل البوصلة
-            // القبلة هي زاوية ثابتة بالنسبة للشمال. 
-            // الكعبة يجب أن تكون عند زاوية القبلة في الدائرة.
             document.querySelector('.kaaba-icon').style.transform = `translateX(-50%) rotate(${qibla}deg) translate(0, -110px) rotate(${-qibla}deg)`;
             document.querySelector('.qibla-pointer').style.transform = `translateX(-50%) rotate(${qibla}deg) translate(0, -135px)`;
 
-            // حساب الفرق للاهتزاز
-            // alpha هو اتجاه الهاتف بالنسبة للشمال (0 = شمال)
-            // qibla هو اتجاه مكة بالنسبة للشمال
-            // إذا كان alpha قريباً من qibla، فالهاتف يتجه للقبلة
             let diff = Math.abs(alpha - qibla);
-            if(diff > 360) diff -= 360; // تصحيح
+            if(diff > 360) diff -= 360; 
             
             const readout = document.getElementById('qiblaDegree');
             readout.innerText = Math.round(qibla) + "°";
@@ -1137,10 +1189,9 @@
                 readout.style.color = "white";
                 status.innerText = "✅ أنت الآن باتجاه القبلة";
                 
-                // اهتزاز (Debounce)
                 const now = Date.now();
                 if (now - lastVibration > 1000 && navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100]); // اهتزاز مميز
+                    navigator.vibrate([100, 50, 100]); 
                     lastVibration = now;
                 }
             } else {
@@ -1254,6 +1305,10 @@
 
                 if(diff <= 0) {
                     timerEl.innerText = "00:00:00";
+                    // === تفعيل الإشعار هنا ===
+                    sendNotification(`حان وقت صلاة ${name}`, "الصلاة خير من النوم، حي على الصلاة.");
+                    // ======================
+
                     if(!adhanHasPlayed && diff > -60000 && name !== 'الشروق' && name !== 'الضحى') { 
                         document.getElementById('adhanAudio').play().catch(e => console.log(e)); 
                         adhanHasPlayed = true; 
@@ -1459,7 +1514,7 @@
             document.getElementById('remedySource').innerText = data.s;
         }
 
-        // --- ميزة جديدة: عداد الفوائت (Qada Counter) ---
+        // --- عداد الفوائت (Qada Counter) ---
         const qadaPrayers = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha', 'witr'];
         const qadaNames = {'fajr': 'الفجر', 'dhuhr': 'الظهر', 'asr': 'العصر', 'maghrib': 'المغرب', 'isha': 'العشاء', 'witr': 'الوتر'};
         let qadaCounts = {};
@@ -1575,10 +1630,112 @@
             });
         }
 
+        // ==========================================
+        // 7. ميزات متقدمة (الإشعارات، الأوسمة، المناسبات)
+        // ==========================================
+
+        /* --- 1. الإشعارات --- */
+        let notificationsEnabled = false;
+
+        function toggleNotifications() {
+            if (!("Notification" in window)) {
+                alert("متصفحك لا يدعم الإشعارات");
+                return;
+            }
+            
+            if (Notification.permission === "granted") {
+                notificationsEnabled = true;
+                updateNotifyBtn();
+                new Notification("الميقات برو", { body: "تم تفعيل الإشعارات بنجاح ✅" });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        notificationsEnabled = true;
+                        updateNotifyBtn();
+                    }
+                });
+            }
+        }
+
+        function updateNotifyBtn() {
+            const btn = document.getElementById('notifyBtn');
+            if(notificationsEnabled || Notification.permission === "granted") {
+                btn.classList.add('active');
+                btn.innerHTML = '<i class="fas fa-bell-slash"></i> مفعلة';
+                notificationsEnabled = true;
+            }
+        }
+
+        function sendNotification(title, body) {
+            if (notificationsEnabled && document.hidden) {
+                new Notification(title, { 
+                    body: body, 
+                    icon: 'https://img.icons8.com/fluency/48/kaaba.png' 
+                });
+            }
+        }
+
+        /* --- 2. نظام الأوسمة (Achievements) --- */
+        const badgesData = [
+            { id: 'fajr_lover', name: 'عاشق الفجر', icon: '🌅', desc: 'سجل قضاء صلاة الفجر', check: () => (qadaCounts && qadaCounts.fajr > 0) },
+            { id: 'tasbih_master', name: 'الذاكر', icon: '📿', desc: 'وصلت 1000 تسبيحة', check: () => (parseInt(localStorage.getItem('tasbihCount') || 0) >= 1000) },
+            { id: 'quran_reader', name: 'قارئ القرآن', icon: '📖', desc: 'حددت ورد الختمة', check: () => (localStorage.getItem('khatma_progress') !== null) },
+            { id: 'zakat_giver', name: 'المزكي', icon: '💰', desc: 'استخدمت حاسبة الزكاة', check: () => (document.getElementById('zakatValue').innerText !== "0") },
+            { id: 'night_owl', name: 'قائم الليل', icon: '🌙', desc: 'فتحت التطبيق في الثلث الأخير', check: () => {
+                const h = new Date().getHours();
+                return (h >= 1 && h <= 3); 
+            }}
+        ];
+
+        function checkBadges() {
+            const container = document.getElementById('badgesContainer');
+            container.innerHTML = '';
+            
+            badgesData.forEach(badge => {
+                const isUnlocked = badge.check();
+                const div = document.createElement('div');
+                div.className = `badge-item ${isUnlocked ? 'unlocked animate__animated animate__pulse' : ''}`;
+                div.innerHTML = `
+                    <span class="badge-icon">${badge.icon}</span>
+                    <div class="badge-name">${badge.name}</div>
+                    <div class="badge-desc">${badge.desc}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+        setInterval(checkBadges, 5000);
+        setTimeout(checkBadges, 1000);
+
+        /* --- 3. المناسبات الإسلامية (مبسط) --- */
+        function getUpcomingEvents() {
+            // تواريخ تقريبية ثابتة (لغرض العرض الجمالي في هذا الإصدار)
+            const events = [
+                { name: "رمضان", desc: "شهر الصيام" },
+                { name: "عيد الفطر", desc: "بعد رمضان" },
+                { name: "يوم عرفة", desc: "9 ذو الحجة" },
+                { name: "عيد الأضحى", desc: "10 ذو الحجة" },
+                { name: "رأس السنة الهجرية", desc: "1 محرم" }
+            ];
+
+            const list = document.getElementById('eventsContainer');
+            let html = '';
+            
+            events.slice(0, 3).forEach(ev => {
+                 html += `
+                    <div class="event-row">
+                        <div class="event-name">${ev.name}</div>
+                        <div class="event-days">${ev.desc}</div>
+                    </div>
+                 `;
+            });
+            list.innerHTML = html;
+        }
+
+        // تشغيل المؤثرات والتهيئة
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
         
         const names99 = [
-            "الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر", "الخالق", "البارئ", "المصور", "الغفار", "القهار", "الوهاب", "الرزاق", "الفتاح", "العليم", "القابض", "الباسط", "الخافض", "الرافع", "المعز", "المذل", "السميع", "البصير", "الحكيم", "العدل", "اللطيف", "الخبير", "الحليم", "العظيم", "الغفور", "الشكور", "العلي", "الكبير", "الحفيظ", "المقيت", "الحسيب", "الجليل", "الكريم", "الرقيب", "المجيب", "الواسع", "الحكيم", "الودود", "المجيد", "الباعث", "الشهيد", "الحق", "الوكيل", "القوي", "المتين", "الولي", "الحميد", "المحصي", "المبدئ", "المعيد", "المحيي", "المميت", "الحي", "القيوم", "الواجد", "الماجد", "الواحد", "الأحد", "الصمد", "القادر", "المقتدر", "المقدم", "المؤخر", "الأول", "الآخر", "الظاهر", "الباطن", "الوالي", "المتعالي", "البر", "التواب", "المنتقم", "العفو", "الرؤوف", "مالك الملك", "ذو الجلال والإكرام", "المقسط", "الجامع", "الغني", "المغني", "المانع", "الضار", "النافع", "النور", "الهادي", "البديع", "الباقي", "الوارث", "الرشيد", "الصبور"
+            "الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر", "الخالق", "البارئ", "المصور", "الغفار", "القهار", "الوهاب", "الرزاق", "الفتاح", "العليم", "القابض", "الباسط", "الخافض", "الرافع", "المعز", "المذل", "السميع", "البصير", "الحكيم", "العدل", "اللطيف", "الخبير", "الحليم", "العظيم", "الغفور", "الشكور", "العلي", "الكبير", "الحفيظ", "المقيت", "الحسيب", "الجليل", "الكريم", "الرقيب", "المجيب", "الواسع", "الحكيم", "الودود", "المجيد", "الباعث", "الشهيد", "الحق", "الوكيل", "القوي", "المتين", "الولي", "الولي", "الحميد", "المحصي", "المبدئ", "المعيد", "المحيي", "المميت", "الحي", "القيوم", "الواجد", "الماجد", "الواحد", "الأحد", "الصمد", "القادر", "المقتدر", "المقدم", "المؤخر", "الأول", "الآخر", "الظاهر", "الباطن", "الوالي", "المتعالي", "البر", "التواب", "المنتقم", "العفو", "الرؤوف", "مالك الملك", "ذو الجلال والإكرام", "المقسط", "الجامع", "الغني", "المغني", "المانع", "الضار", "النافع", "النور", "الهادي", "البديع", "الباقي", "الوارث", "الرشيد", "الصبور"
         ];
         
         const marqueeHTML = names99.map(n => `<span class="god-name">${n}</span>`).join('✦') + names99.map(n => `<span class="god-name">${n}</span>`).join('✦');
@@ -1588,4 +1745,4 @@
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
 </body>
-</html>
+    </html>
