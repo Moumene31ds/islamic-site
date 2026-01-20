@@ -6,7 +6,7 @@
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
-    <title>الميقات برو | الأرقام اللاتينية</title>
+    <title>الميقات برو | الإصدار المحسن</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -647,16 +647,16 @@
         let isLocationFound = false;
         let tempLocationData = null; 
         let hijriOffset = 0; 
-        let calculationMethod = 'MuslimWorldLeague'; // الافتراضي
+        let calculationMethod = 'MuslimWorldLeague'; 
         let mapInstance = null;
         let mapMarker = null;
         let chartInstance = null;
-        let currentAyahData = null; // لتخزين بيانات الآية للمشاركة
+        let currentAyahData = null; 
 
         // روابط الصوتيات الثابتة
         const BASMALA_AUDIO = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
-        // رابط لـ "صدق الله العظيم" (ملف صوتي من غيت هاب)
-        const SADAQALLAH_AUDIO = "https://github.com/semarketir/quranjson/raw/master/source/audio/sadaqallah.mp3";
+        // تم تحديث الرابط ليعمل عبر CDN لضمان عمله. إذا توقف يفضل تحميل الملف محلياً
+        const SADAQALLAH_AUDIO = "https://cdn.jsdelivr.net/gh/semarketir/quranjson@master/source/audio/sadaqallah.mp3";
 
         async function initApp() {
             const savedOffset = localStorage.getItem('miqat_hijri_offset');
@@ -1070,51 +1070,80 @@
         }
 
         // ==========================================
-        // 5. الأذكار والصوتيات
+        // 5. الأذكار والصوتيات (تم التحديث)
         // ==========================================
         
+        let isAudioPlaying = false; 
+
         function toggleAudio() {
             const icon = document.getElementById('audioIcon');
             const player = document.getElementById('quranAudio');
             const indicator = document.getElementById('playingStatus');
             
-            if(!player.paused) {
+            // إيقاف التشغيل إذا كان يعمل حالياً
+            if (!player.paused || isAudioPlaying) {
                 player.pause();
-                icon.className="fas fa-volume-mute";
+                player.currentTime = 0;
+                isAudioPlaying = false;
+                icon.className = "fas fa-volume-mute";
                 indicator.style.display = 'none';
                 return;
             }
 
-            if(ayahAudioUrl) {
+            if (ayahAudioUrl) {
+                isAudioPlaying = true;
                 indicator.style.display = 'block';
-                icon.className="fas fa-stop";
+                indicator.innerText = "جاري تشغيل البسملة...";
+                icon.className = "fas fa-stop";
 
                 // 1. تشغيل البسملة
-                player.src = BASMALA_AUDIO; 
-                player.play();
+                player.src = BASMALA_AUDIO;
                 
+                player.play().catch(e => { console.error("خطأ تشغيل البسملة", e); stopAudio(); });
+
                 player.onended = () => {
                     // 2. تشغيل الآية
-                    player.src = ayahAudioUrl; 
-                    player.play(); 
-                    
+                    indicator.innerText = "جاري تلاوة الآية...";
+                    player.src = ayahAudioUrl;
+                    player.play().catch(e => { console.error("خطأ تشغيل الآية", e); stopAudio(); });
+
                     player.onended = () => {
                         // 3. تشغيل صدق الله العظيم
+                        indicator.innerText = "صدق الله العظيم...";
                         player.src = SADAQALLAH_AUDIO;
-                        player.play();
+                        player.play().catch(e => { 
+                            console.warn("لم يتم العثور على ملف صدق الله العظيم"); 
+                            stopAudio(); 
+                        });
 
                         player.onended = () => {
-                            icon.className="fas fa-volume-mute";
-                            indicator.style.display = 'none';
+                            stopAudio();
                         };
                         
                         player.onerror = () => {
-                             icon.className="fas fa-volume-mute";
-                             indicator.style.display = 'none';
+                            console.log("خطأ في ملف صدق الله العظيم");
+                            stopAudio();
                         }
                     };
                 };
+                
+                player.onerror = (e) => {
+                    console.error("خطأ في مشغل الصوت", e);
+                    alert("تعذر تشغيل الملف الصوتي. تأكد من الاتصال بالإنترنت.");
+                    stopAudio();
+                };
             }
+        }
+
+        function stopAudio() {
+            const player = document.getElementById('quranAudio');
+            const icon = document.getElementById('audioIcon');
+            const indicator = document.getElementById('playingStatus');
+            
+            player.pause();
+            isAudioPlaying = false;
+            icon.className = "fas fa-volume-mute";
+            indicator.style.display = 'none';
         }
 
         const adhkarData = {
@@ -1143,17 +1172,37 @@
         }
 
         async function fetchAyah() {
+            // إيقاف الصوت القديم إذا كان يعمل عند طلب آية جديدة
+            stopAudio();
+
             const container = document.getElementById('ayahContainer');
-            container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i>';
+            container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i> <br><span style="font-size:0.8rem">جاري التحميل...</span>';
+            
             try {
-                const res = await fetch('https://api.alquran.cloud/v1/ayah/random/ar.alafasy');
+                // إضافة timestamp لمنع التخزين المؤقت (Caching)
+                const res = await fetch(`https://api.alquran.cloud/v1/ayah/random/ar.alafasy?t=${new Date().getTime()}`);
+                
+                if (!res.ok) throw new Error("فشل الاتصال بالخادم");
+                
                 const d = await res.json();
+                
                 if(d.code === 200) {
                     currentAyahData = d.data; 
                     ayahAudioUrl = d.data.audio;
-                    container.innerHTML = `<div class="adhkar-text animate__animated animate__fadeIn">"${d.data.text}"</div><div style="font-size:0.8rem; color:var(--accent-color);">سورة ${d.data.surah.name} - آية ${d.data.numberInSurah}</div>`;
+                    container.innerHTML = `
+                        <div class="adhkar-text animate__animated animate__fadeIn">"${d.data.text}"</div>
+                        <div style="font-size:0.8rem; color:var(--accent-color);">سورة ${d.data.surah.name} - آية ${d.data.numberInSurah}</div>
+                    `;
+                } else {
+                    throw new Error("بيانات غير صحيحة");
                 }
-            } catch(e) { container.innerHTML = `<div class="adhkar-text">"فَإِنَّ مَعَ الْعُسْرِ يُسْرًا"</div>`; }
+            } catch(e) { 
+                console.error(e);
+                container.innerHTML = `
+                    <div class="adhkar-text" style="color:#ff6b6b">تعذر جلب الآية</div>
+                    <button onclick="fetchAyah()" class="btn-small">حاول مرة أخرى</button>
+                `; 
+            }
         }
 
         function shareAyah() {
