@@ -6,7 +6,7 @@
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
-    <title>الميقات برو | الإصدار المحسن</title>
+    <title>الميقات برو | الإصدار المطور</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -33,7 +33,6 @@
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         
-        /* إجبار الأرقام على أن تكون لاتينية في الخطوط */
         .ramadan-num, .timer-huge, .qiyam-time, .hijri-text, .gregorian-text, .prayer-card div, .tasbih-inner, #khatmaStatus {
             font-variant-numeric: tabular-nums;
         }
@@ -177,6 +176,15 @@
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(0, 0, 0, 0.4) 100%);
             border: 1px solid rgba(255, 215, 0, 0.3); text-align: center; position: relative;
         }
+        
+        /* كارد التذكير بالصيام */
+        .fasting-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(0, 0, 0, 0.4) 100%);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            text-align: center;
+            display: none; /* يظهر فقط في أيام الصيام */
+        }
+
         .ramadan-header { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 15px; color: var(--accent-color); }
         .ramadan-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .ramadan-unit { background: rgba(0,0,0,0.3); border-radius: 15px; padding: 10px 5px; border: 1px solid rgba(255,255,255,0.05); }
@@ -287,6 +295,22 @@
         }
         .btn-small:hover { background: var(--accent-color); color: #000; }
 
+        .btn-play-ayah {
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: bold;
+        }
+        .btn-play-ayah:active { transform: scale(0.95); }
+
         .mood-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
         .mood-item {
             background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
@@ -319,7 +343,6 @@
         .qiyam-box { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 12px; min-width: 45%; border: 1px solid var(--border-color); }
         .qiyam-time { font-family: 'Arial'; font-weight: bold; font-size: 1.1rem; color: var(--accent-color); margin-top: 5px; }
 
-        /* إضافة تنسيق حالة تشغيل الصوت */
         .playing-indicator { color: var(--accent-color); font-size: 0.8rem; margin-top: 5px; display: none; }
         
         .ayah-actions { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
@@ -419,7 +442,6 @@
             <div class="header-actions">
                 <button class="btn-icon" onclick="resetLocationData()" title="تغيير الموقع"><i class="fas fa-map-marker-alt"></i></button>
                 <button class="btn-icon" onclick="openQibla()" title="القبلة"><i class="fas fa-compass"></i></button>
-                <button class="btn-icon" onclick="toggleAudio()" title="الاستماع للآية"><i class="fas fa-volume-mute" id="audioIcon"></i></button>
             </div>
         </header>
 
@@ -435,6 +457,14 @@
                 <div class="ramadan-unit"><div class="ramadan-num" id="rMins">00</div><div class="ramadan-label">دقيقة</div></div>
                 <div class="ramadan-unit"><div class="ramadan-num" id="rSecs">00</div><div class="ramadan-label">ثانية</div></div>
             </div>
+        </div>
+
+        <div class="card fasting-card animate__animated animate__fadeIn" id="fastingCard">
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; color: #10b981;">
+                <i class="fas fa-hand-holding-heart"></i>
+                <h3 style="margin:0; font-size:1rem;">تذكير بصيام السنة</h3>
+            </div>
+            <p id="fastingText" style="margin-top:10px; font-size:0.9rem; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,0.5);"></p>
         </div>
 
         <div class="card">
@@ -556,8 +586,13 @@
         <div class="card" style="margin-top: 10px;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-book-open"></i> ورد قرآني</h3>
-                <div id="playingStatus" class="playing-indicator"><i class="fas fa-wave-square"></i> جاري الاستماع...</div>
+                <button class="btn-play-ayah" onclick="toggleAudio()">
+                    <i class="fas fa-play" id="audioIcon"></i> <span id="playBtnText">استماع</span>
+                </button>
             </div>
+            
+            <div id="playingStatus" class="playing-indicator" style="text-align: center; margin-bottom: 10px;"><i class="fas fa-wave-square"></i> جاري التحضير...</div>
+
             <div id="ayahContainer" style="text-align: center;">
                 <i class="fas fa-circle-notch fa-spin spinner"></i>
             </div>
@@ -592,7 +627,7 @@
         <div class="marquee-content" id="asmaaMarquee"></div>
     </div>
 
-    <audio id="quranAudio"></audio>
+    <audio id="quranAudio" preload="auto"></audio>
     <audio id="adhanAudio" src="https://cdn.islamic.network/adhan/makkah.mp3" preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
@@ -655,8 +690,11 @@
 
         // روابط الصوتيات الثابتة
         const BASMALA_AUDIO = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
-        // تم تحديث الرابط ليعمل عبر CDN لضمان عمله. إذا توقف يفضل تحميل الملف محلياً
-        const SADAQALLAH_AUDIO = "https://cdn.jsdelivr.net/gh/semarketir/quranjson@master/source/audio/sadaqallah.mp3";
+        // تم تحديث الرابط لصدق الله العظيم
+        const SADAQALLAH_AUDIO = "https://server8.mp3quran.net/s_gmd/001.mp3"; // استخدام الفاتحة كسد فراغ مؤقت أو رابط بديل موثوق إذا وجد، لكن الأفضل:
+        // رابط بديل للصوت القصير "صدق الله العظيم"
+        const SADAQALLAH_URL = "https://media.blubrry.com/muslim_central_quran/podcasts.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-000-sadaqallahul-azeem.mp3";
+
 
         async function initApp() {
             const savedOffset = localStorage.getItem('miqat_hijri_offset');
@@ -908,15 +946,49 @@
             date.setDate(date.getDate() + hijriOffset);
             
             // التاريخ الهجري (مع فرض الأرقام اللاتينية)
-            document.getElementById('hijriDisplay').innerText = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { 
+            const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { 
                 year: 'numeric', month: 'long', day: 'numeric', calendar: 'islamic-umalqura', numberingSystem: 'latn' 
-            }).format(date);
+            });
+            document.getElementById('hijriDisplay').innerText = formatter.format(date);
             
+            // --- ميزة جديدة: تذكير صيام السنة ---
+            checkSunnahFasting(date, formatter);
+
             // التاريخ الميلادي (مع فرض الأرقام اللاتينية)
             const gregDate = new Date();
             document.getElementById('gregorianDisplay').innerText = gregDate.toLocaleDateString('ar-EG', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', numberingSystem: 'latn' 
             });
+        }
+
+        function checkSunnahFasting(dateObj, formatter) {
+            // استخراج اليوم والشهر الهجري تقريبيا
+            const parts = formatter.formatToParts(dateObj);
+            const dayPart = parts.find(p => p.type === 'day').value;
+            const dayNum = parseInt(dayPart);
+            const dayOfWeek = dateObj.getDay(); // 1 = Monday, 4 = Thursday
+
+            const card = document.getElementById('fastingCard');
+            const text = document.getElementById('fastingText');
+            let message = "";
+
+            // الأيام البيض (13، 14، 15)
+            if (dayNum >= 13 && dayNum <= 15) {
+                message = `اليوم ${dayNum} من الأيام البيض المستحب صيامها 🌕`;
+            }
+            // الاثنين والخميس
+            else if (dayOfWeek === 1) {
+                message = "اليوم الاثنين، تذكر صيام السنة 🌿";
+            } else if (dayOfWeek === 4) {
+                message = "اليوم الخميس، تذكر صيام السنة 🌿";
+            }
+
+            if(message) {
+                card.style.display = 'block';
+                text.innerText = message;
+            } else {
+                card.style.display = 'none';
+            }
         }
 
         function openQibla() {
@@ -1077,6 +1149,7 @@
 
         function toggleAudio() {
             const icon = document.getElementById('audioIcon');
+            const btnText = document.getElementById('playBtnText');
             const player = document.getElementById('quranAudio');
             const indicator = document.getElementById('playingStatus');
             
@@ -1085,7 +1158,8 @@
                 player.pause();
                 player.currentTime = 0;
                 isAudioPlaying = false;
-                icon.className = "fas fa-volume-mute";
+                icon.className = "fas fa-play";
+                btnText.innerText = "استماع";
                 indicator.style.display = 'none';
                 return;
             }
@@ -1095,6 +1169,7 @@
                 indicator.style.display = 'block';
                 indicator.innerText = "جاري تشغيل البسملة...";
                 icon.className = "fas fa-stop";
+                btnText.innerText = "إيقاف";
 
                 // 1. تشغيل البسملة
                 player.src = BASMALA_AUDIO;
@@ -1109,10 +1184,12 @@
 
                     player.onended = () => {
                         // 3. تشغيل صدق الله العظيم
+                        // ملاحظة: العديد من المصادر لا توفر ملف "صدق الله العظيم" منفصلاً بوضوح
+                        // لذا قمنا بإضافة رابط جديد
                         indicator.innerText = "صدق الله العظيم...";
-                        player.src = SADAQALLAH_AUDIO;
+                        player.src = SADAQALLAH_URL; 
                         player.play().catch(e => { 
-                            console.warn("لم يتم العثور على ملف صدق الله العظيم"); 
+                            console.warn("لم يتم العثور على ملف صدق الله العظيم، إنهاء."); 
                             stopAudio(); 
                         });
 
@@ -1121,7 +1198,7 @@
                         };
                         
                         player.onerror = () => {
-                            console.log("خطأ في ملف صدق الله العظيم");
+                            // في حال فشل رابط صدق الله العظيم، ننهي التشغيل بصمت
                             stopAudio();
                         }
                     };
@@ -1132,18 +1209,22 @@
                     alert("تعذر تشغيل الملف الصوتي. تأكد من الاتصال بالإنترنت.");
                     stopAudio();
                 };
+            } else {
+                alert("الرجاء انتظار تحميل الآية أولاً");
             }
         }
 
         function stopAudio() {
             const player = document.getElementById('quranAudio');
             const icon = document.getElementById('audioIcon');
+            const btnText = document.getElementById('playBtnText');
             const indicator = document.getElementById('playingStatus');
             
             player.pause();
             isAudioPlaying = false;
-            icon.className = "fas fa-volume-mute";
-            indicator.style.display = 'none';
+            if(icon) icon.className = "fas fa-play";
+            if(btnText) btnText.innerText = "استماع";
+            if(indicator) indicator.style.display = 'none';
         }
 
         const adhkarData = {
@@ -1367,4 +1448,4 @@
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
 </body>
-</html>
+    </html>
