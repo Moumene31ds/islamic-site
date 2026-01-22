@@ -559,7 +559,24 @@
         .radio-btn { background: var(--icon-bg); color: #fff; border: 1px solid var(--border-color); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
         .radio-btn.play { width: 50px; height: 50px; background: var(--accent-color); color: #000; font-size: 1.2rem; }
         .radio-btn:hover { transform: scale(1.1); }
-        
+        .mixer-grid { display: flex; flex-direction: column; gap: 10px; }
+.mixer-item { 
+    display: flex; align-items: center; gap: 10px; 
+    background: rgba(0,0,0,0.2); padding: 8px; border-radius: 10px; 
+}
+.vol-slider { flex: 1; height: 4px; border-radius: 2px; -webkit-appearance: none; background: rgba(255,255,255,0.3); }
+.vol-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: var(--accent-color); cursor: pointer; }
+.toggle-mix-btn {
+    background: transparent; border: 1px solid rgba(255,255,255,0.3); color: #fff;
+    padding: 2px 10px; border-radius: 15px; font-size: 0.75rem; cursor: pointer; width: 60px;
+}
+.toggle-mix-btn.active { background: var(--accent-color); color: #000; border-color: var(--accent-color); font-weight: bold; }
+.timer-chips { display: flex; gap: 10px; justify-content: center; }
+.timer-chips span { 
+    background: rgba(255,255,255,0.1); padding: 5px 15px; border-radius: 20px; 
+    font-size: 0.8rem; cursor: pointer; transition: 0.3s; 
+}
+.timer-chips span:hover { background: rgba(255,255,255,0.2); }
         .hisn-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #ccc; padding: 10px 5px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
         .hisn-btn:hover { background: var(--accent-color); color: #000; }
     </style>
@@ -928,7 +945,48 @@
                 <h3 style="font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-broadcast-tower"></i> إذاعة القرآن المباشرة</h3>
                 <div class="live-indicator"><span class="blink-dot"></span> مباشر</div>
             </div>
-            
+            <div class="card sakinah-card" style="background: linear-gradient(to right, #2c3e50, #4ca1af); position: relative; overflow: hidden;">
+    <i class="fas fa-cloud-moon" style="position: absolute; left: -10px; bottom: -10px; font-size: 5rem; opacity: 0.1;"></i>
+    
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; position: relative;">
+        <h3 style="color:#fff; font-size: 1rem;"><i class="fas fa-headphones-alt"></i> ستوديو السكينة</h3>
+        <span style="font-size: 0.7rem; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px;">للنوم والتركيز</span>
+    </div>
+
+    <div class="mixer-grid">
+        <div class="mixer-item">
+            <i class="fas fa-quran"></i>
+            <input type="range" min="0" max="100" value="80" class="vol-slider" oninput="updateMixerVol('quran', this.value)">
+            <button class="toggle-mix-btn" id="btn-mix-quran" onclick="toggleMixerSound('quran')">تشغيل</button>
+        </div>
+        
+        <div class="mixer-item">
+            <i class="fas fa-cloud-showers-heavy"></i>
+            <input type="range" min="0" max="100" value="30" class="vol-slider" oninput="updateMixerVol('rain', this.value)">
+            <button class="toggle-mix-btn" id="btn-mix-rain" onclick="toggleMixerSound('rain')">مطر</button>
+        </div>
+
+        <div class="mixer-item">
+            <i class="fas fa-tree"></i>
+            <input type="range" min="0" max="100" value="40" class="vol-slider" oninput="updateMixerVol('night', this.value)">
+            <button class="toggle-mix-btn" id="btn-mix-night" onclick="toggleMixerSound('night')">ليل</button>
+        </div>
+    </div>
+
+    <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+        <div style="font-size: 0.8rem; color: #ccc; margin-bottom: 5px;">⏱ مؤقت النوم (إيقاف تلقائي)</div>
+        <div class="timer-chips">
+            <span onclick="setSleepTimer(15)">15د</span>
+            <span onclick="setSleepTimer(30)">30د</span>
+            <span onclick="setSleepTimer(60)">60د</span>
+            <span onclick="setSleepTimer(0)" style="color: #ff6b6b;">إلغاء</span>
+        </div>
+        <div id="sleepTimerDisplay" style="text-align: center; font-size: 0.8rem; color: var(--accent-color); margin-top: 5px;"></div>
+    </div>
+</div>
+
+<audio id="mix_rain" loop src="https://assets.mixkit.co/sfx/preview/mixkit-light-rain-loop-2393.mp3"></audio>
+<audio id="mix_night" loop src="https://assets.mixkit.co/sfx/preview/mixkit-crickets-and-insects-in-the-wild-ambience-39.mp3"></audio>
             <div class="radio-controls">
                 <button class="radio-btn prev" onclick="changeStation(-1)"><i class="fas fa-step-forward"></i></button>
                 <div class="station-info" style="text-align:center;">
@@ -1587,7 +1645,83 @@ const adhanSounds = {
                 timerEl.innerText = `${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
             }, 1000);
         }
+let sleepTimerId = null;
 
+function toggleMixerSound(type) {
+    let audio;
+    const btn = document.getElementById(`btn-mix-${type}`);
+    
+    if(type === 'quran') {
+        // نستخدم نفس منطق الراديو أو القرآن الموجود
+        if(isRadioPlaying) toggleRadio(); // إيقاف الراديو العادي
+        // هنا يمكنك تشغيل تلاوة هادئة محددة
+        audio = document.getElementById('quranAudio'); 
+        if(audio.paused) {
+            audio.src = "https://download.tvquran.com/download/recitations/random/1.mp3"; // تلاوة عشوائية هادئة
+            audio.loop = true;
+            audio.play();
+            btn.classList.add('active');
+            btn.innerText = "إيقاف";
+        } else {
+            audio.pause();
+            audio.loop = false;
+            btn.classList.remove('active');
+            btn.innerText = "تشغيل";
+        }
+    } else {
+        audio = document.getElementById(`mix_${type}`);
+        if(audio.paused) {
+            audio.play();
+            btn.classList.add('active');
+        } else {
+            audio.pause();
+            btn.classList.remove('active');
+        }
+    }
+}
+
+function updateMixerVol(type, val) {
+    let audio;
+    if(type === 'quran') audio = document.getElementById('quranAudio');
+    else audio = document.getElementById(`mix_${type}`);
+    if(audio) audio.volume = val / 100;
+}
+
+function setSleepTimer(minutes) {
+    if(sleepTimerId) clearTimeout(sleepTimerId);
+    const display = document.getElementById('sleepTimerDisplay');
+    
+    if(minutes === 0) {
+        display.innerText = "";
+        return;
+    }
+    
+    display.innerText = `سيتم إيقاف الصوت خلال ${minutes} دقيقة 😴`;
+    
+    sleepTimerId = setTimeout(() => {
+        // إيقاف تدريجي للصوت
+        const sounds = ['quranAudio', 'mix_rain', 'mix_night'];
+        sounds.forEach(id => {
+            const aud = document.getElementById(id);
+            if(aud && !aud.paused) {
+                // تخفيض الصوت تدريجياً
+                let fadeOut = setInterval(() => {
+                    if(aud.volume > 0.05) aud.volume -= 0.05;
+                    else {
+                        aud.pause();
+                        clearInterval(fadeOut);
+                        // إعادة ضبط الأزرار
+                        document.querySelectorAll('.toggle-mix-btn').forEach(b => {
+                           b.classList.remove('active');
+                           if(b.id === 'btn-mix-quran') b.innerText = "تشغيل";
+                        });
+                    }
+                }, 200);
+            }
+        });
+        display.innerText = "تم إيقاف الصوت، نوماً هنيئاً";
+    }, minutes * 60000);
+}
         // ==========================================
         // 7. ميزات (أذكار، ورد، سبحة، فوائت)
         // ==========================================
@@ -2353,6 +2487,51 @@ function toggleRamadanSim() {
 
         initApp();
         setInterval(updateSmartAdhkar, 3600000); 
+function initDynamicSky() {
+    setInterval(updateSkyGradient, 60000); // تحديث كل دقيقة
+    updateSkyGradient();
+}
+
+function updateSkyGradient() {
+    if(!coords) return;
+    const now = new Date();
+    
+    // حساب المواقيت لهذا اليوم
+    let params = adhan.CalculationMethod[calculationMethod] ? adhan.CalculationMethod[calculationMethod]() : adhan.CalculationMethod.MuslimWorldLeague();
+    const times = new adhan.PrayerTimes(coords, now, params);
+    
+    // تحديد "النسبة المئوية" لتقدم اليوم
+    const sunrise = times.sunrise.getTime();
+    const sunset = times.maghrib.getTime(); // نعتبر المغرب هو الغروب
+    const nowTime = now.getTime();
+    
+    let gradient = "";
+    
+    if (nowTime < sunrise - 3600000) { 
+        // ليل عميق
+        gradient = "linear-gradient(135deg, #0f172a 0%, #000000 100%)"; 
+    } else if (nowTime < sunrise) {
+        // الفجر (أزرق غامق إلى برتقالي خفيف)
+        gradient = "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)";
+    } else if (nowTime < sunrise + 3600000) {
+        // ساعة الشروق الذهبية
+        gradient = "linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%)";
+    } else if (nowTime < sunset - 3600000) {
+        // النهار (سماوي)
+        gradient = "linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)";
+        document.body.style.color = "#000"; // تغيير النص للأسود في النهار
+    } else if (nowTime < sunset) {
+        // ساعة الغروب (برتقالي وأحمر)
+        gradient = "linear-gradient(135deg, #f97316 0%, #7c2d12 100%)";
+    } else {
+        // الليل
+        gradient = "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)";
+    }
+    
+    // تطبيق التدرج بنعومة
+    document.body.style.background = gradient;
+}
+// ملاحظة: لا تنس استدعاء initDynamicSky() داخل دالة initApp()
     </script>
 </body>
 </html>).innerHTML = marqueeHTML;
