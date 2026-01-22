@@ -6,18 +6,20 @@
     
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
-    <title>الميقات برو | الإصدار المطور</title>
+    <title>الميقات برو | الإصدار الشامل</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
     <style>
         /* المتغيرات الأساسية */
         :root {
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --card-bg: rgba(30, 41, 59, 0.85);
+            --card-bg: rgba(30, 41, 59, 0.65); /* تم تعديل الشفافية لتأثير الزجاج */
             --text-primary: #ffffff;
             --text-secondary: #cbd5e1;
             --accent-color: #ffd700;
@@ -27,7 +29,7 @@
         }
 
         body.fajr-mode { --bg-gradient: linear-gradient(135deg, #1a2980, #26d0ce); } 
-        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.9); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
+        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.85); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
         body.maghrib-mode { --bg-gradient: linear-gradient(135deg, #2c3e50, #fd746c); } 
         body.night-mode { --bg-gradient: linear-gradient(135deg, #0f172a 0%, #000000 100%); } 
 
@@ -164,8 +166,11 @@
         }
         .btn-icon:active { transform: scale(0.92); }
 
+        /* === تحسين Glassmorphism للكروت === */
         .card { 
-            background: var(--card-bg); backdrop-filter: blur(25px); 
+            background: var(--card-bg); 
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid var(--border-color); border-radius: 28px; 
             padding: 25px 20px; margin-bottom: 20px; 
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
@@ -445,7 +450,7 @@
         .event-date { font-size: 0.8rem; color: var(--accent-color); font-family: 'Arial'; }
         .event-days { font-size: 0.7rem; background: rgba(255,255,255,0.1); padding: 2px 8px; border-radius: 10px; }
 
-        /* --- تصميم نافذة الإعدادات (جديد) --- */
+        /* --- تصميم نافذة الإعدادات --- */
         .settings-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.85); z-index: 5000;
@@ -482,7 +487,7 @@
         .color-swatch::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; }
         .color-swatch.active::after { opacity: 1; }
 
-        /* --- إضافات صفحة الإعدادات الجديدة --- */
+        /* إضافات الإعدادات */
         .control-group {
             display: flex; gap: 10px; align-items: center;
         }
@@ -503,6 +508,18 @@
         }
         .preview-btn:active { transform: scale(0.9); }
         .preview-btn.playing { background: #ef4444; color: white; animation: pulse 1s infinite; }
+
+        /* === إضافات جديدة للراديو وحصن المسلم === */
+        .live-indicator { background: rgba(239, 68, 68, 0.2); color: #ef4444; padding: 2px 8px; border-radius: 5px; font-size: 0.7rem; display: flex; align-items: center; gap: 5px; }
+        .blink-dot { width: 6px; height: 6px; background: #ef4444; border-radius: 50%; animation: blinker 1.5s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        .radio-controls { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 15px; border: 1px solid var(--border-color); }
+        .radio-btn { background: var(--icon-bg); color: #fff; border: 1px solid var(--border-color); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .radio-btn.play { width: 50px; height: 50px; background: var(--accent-color); color: #000; font-size: 1.2rem; }
+        .radio-btn:hover { transform: scale(1.1); }
+        
+        .hisn-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #ccc; padding: 10px 5px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
+        .hisn-btn:hover { background: var(--accent-color); color: #000; }
     </style>
 </head>
 <body class="night-mode">
@@ -605,10 +622,19 @@
             </div>
         </header>
 
-        <div style="text-align: left;">
+        <div style="text-align: left; margin-bottom: 15px;">
             <button id="notifyBtn" class="notification-btn" onclick="toggleNotifications()">
                 <i class="fas fa-bell"></i> تفعيل التنبيهات
             </button>
+        </div>
+
+        <div class="card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.8) 0%, rgba(55, 48, 163, 0.8) 100%); border:none;">
+            <div style="text-align:center;">
+                <i class="fas fa-trophy" style="font-size:2rem; color:#ffd700; margin-bottom:10px;"></i>
+                <h3 style="color:#fff; margin-bottom:5px;">تحدي الخير اليومي</h3>
+                <p id="dailyChallengeText" style="color:#e0e7ff; font-size:1rem; margin: 10px 0; font-weight:bold;">...</p>
+                <button onclick="acceptChallenge()" id="challengeBtn" class="btn-small" style="background:#fff; color:#4f46e5; border:none; font-weight:bold;">قبلت التحدي ✅</button>
+            </div>
         </div>
 
         <div class="card ramadan-card animate__animated animate__flipInX">
@@ -714,23 +740,38 @@
         </div>
 
         <div class="card">
+            <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 15px;">
+                <i class="fas fa-shield-alt"></i> حصن المسلم السريع
+            </h3>
+            <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+                <button class="hisn-btn" onclick="showHisn('worry')">😟 للهم والحزن</button>
+                <button class="hisn-btn" onclick="showHisn('debt')">💸 قضاء الدين</button>
+                <button class="hisn-btn" onclick="showHisn('travel')">✈️ دعاء السفر</button>
+                <button class="hisn-btn" onclick="showHisn('sick')">🤒 للمريض</button>
+                <button class="hisn-btn" onclick="showHisn('istikhara')">🤲 الاستخارة</button>
+                <button class="hisn-btn" onclick="showHisn('sleep')">🛌 الأرق</button>
+            </div>
+            <div id="hisnResult" style="display:none; margin-top:15px; padding:15px; background:rgba(0,0,0,0.3); border-radius:10px; border-right:3px solid var(--accent-color);"></div>
+        </div>
+
+        <div class="card">
             <h3 style="font-size: 0.95rem; color: var(--text-secondary); margin-bottom: 10px;">
                 <i class="fas fa-heartbeat"></i> طبيب القلوب
             </h3>
             <div class="mood-grid">
-                <div class="mood-item" onclick="analyzeMood('anxious')">
+                <div class="mood-item" onclick="analyzeMood('anxious', this)">
                     <span class="mood-emoji">😟</span>
                     <span class="mood-label">قلق</span>
                 </div>
-                <div class="mood-item" onclick="analyzeMood('sad')">
+                <div class="mood-item" onclick="analyzeMood('sad', this)">
                     <span class="mood-emoji">😢</span>
                     <span class="mood-label">حزين</span>
                 </div>
-                <div class="mood-item" onclick="analyzeMood('angry')">
+                <div class="mood-item" onclick="analyzeMood('angry', this)">
                     <span class="mood-emoji">😠</span>
                     <span class="mood-label">غاضب</span>
                 </div>
-                <div class="mood-item" onclick="analyzeMood('happy')">
+                <div class="mood-item" onclick="analyzeMood('happy', this)">
                     <span class="mood-emoji">😊</span>
                     <span class="mood-label">سعيد</span>
                 </div>
@@ -791,7 +832,7 @@
             </div>
         </div>
 
-        <div class="card" style="margin-top: 10px;">
+        <div class="card" style="margin-top: 10px;" id="quranCard">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-book-open"></i> ورد قرآني</h3>
                 <button class="btn-play-ayah" onclick="toggleAudio()">
@@ -807,7 +848,25 @@
             
             <div class="ayah-actions">
                 <button class="btn-small" onclick="fetchAyah()"><i class="fas fa-sync-alt"></i> آية أخرى</button>
-                <button class="btn-small" onclick="shareAyah()"><i class="fas fa-share-alt"></i> مشاركة</button>
+                <button class="btn-small" onclick="shareAyahAsImage()"><i class="fas fa-image"></i> حفظ صورة</button>
+                <button class="btn-small" onclick="shareAyah()"><i class="fas fa-share-alt"></i> مشاركة نص</button>
+            </div>
+        </div>
+
+        <div class="card radio-card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="font-size: 0.95rem; color: var(--text-secondary);"><i class="fas fa-broadcast-tower"></i> إذاعة القرآن المباشرة</h3>
+                <div class="live-indicator"><span class="blink-dot"></span> مباشر</div>
+            </div>
+            
+            <div class="radio-controls">
+                <button class="radio-btn prev" onclick="changeStation(-1)"><i class="fas fa-step-forward"></i></button>
+                <div class="station-info" style="text-align:center;">
+                    <div id="stationName" style="font-weight:bold; color:#fff; font-size: 0.9rem;">إذاعة القراءات</div>
+                    <div style="font-size:0.7rem; color:var(--accent-color);">جاري البث...</div>
+                </div>
+                <button class="radio-btn play" onclick="toggleRadio()" id="radioPlayBtn"><i class="fas fa-play"></i></button>
+                <button class="radio-btn next" onclick="changeStation(1)"><i class="fas fa-step-backward"></i></button>
             </div>
         </div>
 
@@ -861,13 +920,16 @@
                 <div class="control-group">
                     <select id="settingsReciter" class="custom-select" onchange="saveSettings()">
                         <option value="ar.alafasy">مشاري العفاسي</option>
+                        <option value="ar.abdulbasit">عبدالباسط عبدالصمد</option>
+                        <option value="ar.minshawi">محمد صديق المنشاوي</option>
+                        <option value="ar.husary">محمود خليل الحصري</option>
+                        <option value="ar.sudais">عبدالرحمن السديس</option>
+                        <option value="ar.mahermuaiqly">ماهر المعيقلي</option>
+                        <option value="ar.ahmedajamy">أحمد العجمي</option>
                     </select>
                     <button class="preview-btn" id="btnPreviewReciter" onclick="previewSelectedReciter()">
                         <i class="fas fa-play"></i>
                     </button>
-                </div>
-                <div style="font-size: 0.75rem; color: #aaa; margin-top: 5px; text-align: center;">
-                    سيتم تشغيل "البسملة" لتجربة صوت القارئ
                 </div>
             </div>
 
@@ -883,7 +945,7 @@
             </div>
 
             <div style="text-align: center; margin-top: 20px; font-size: 0.8rem; color: #64748b;">
-                الإصدار 2.1 | الميقات برو
+                الإصدار 3.0 | الميقات برو (نسخة المطور)
             </div>
         </div>
     </div>
@@ -948,32 +1010,23 @@
         let mapMarker = null;
         let chartInstance = null;
         let currentAyahData = null; 
-        const BASMALA_AUDIO = "https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3";
-        const SADAQALLAH_URL = "https://media.blubrry.com/muslim_central_quran/podcasts.qurancentral.com/mishary-rashid-alafasy/mishary-rashid-alafasy-000-sadaqallahul-azeem.mp3";
         
-        // متغيرات الإعدادات (جديد)
+        // متغيرات الإعدادات
         let currentReciter = 'ar.alafasy';
         let currentThemeColor = '#ffd700';
 
         // ==========================================
-        //  إعدادات القراء والأصوات (الجديدة)
+        //  إعدادات القراء والأصوات
         // ==========================================
         const recitersList = [
             { id: 'ar.alafasy', name: 'مشاري العفاسي' },
             { id: 'ar.abdulbasit', name: 'عبدالباسط عبدالصمد (مجود)' },
             { id: 'ar.abdulbasitmurattal', name: 'عبدالباسط عبدالصمد (مرتل)' },
             { id: 'ar.minshawi', name: 'محمد صديق المنشاوي' },
-            { id: 'ar.minshawimujawwad', name: 'المنشاوي (مجود)' },
             { id: 'ar.husary', name: 'محمود خليل الحصري' },
-            { id: 'ar.husarymujawwad', name: 'الحصري (مجود)' },
             { id: 'ar.sudais', name: 'عبدالرحمن السديس' },
-            { id: 'ar.shuraim', name: 'سعود الشريم' },
             { id: 'ar.mahermuaiqly', name: 'ماهر المعيقلي' },
-            { id: 'ar.ahmedajamy', name: 'أحمد العجمي' },
-            { id: 'ar.saadalkhamdi', name: 'سعد الغامدي' },
-            { id: 'ar.hudhaify', name: 'علي الحذيفي' },
-            { id: 'ar.ibrahimakhdar', name: 'إبراهيم الأخضر' },
-            { id: 'ar.abdullahbasfar', name: 'عبدالله بصفر' }
+            { id: 'ar.ahmedajamy', name: 'أحمد العجمي' }
         ];
 
         const adhanSounds = {
@@ -990,8 +1043,8 @@
 
         // 3. التهيئة
         async function initApp() {
-            populateRecitersList(); // تعبئة القائمة
-            loadSettings(); // تحميل الإعدادات
+            populateRecitersList(); 
+            loadSettings(); 
 
             const savedOffset = localStorage.getItem('miqat_hijri_offset');
             if(savedOffset) hijriOffset = parseInt(savedOffset);
@@ -1000,6 +1053,7 @@
             initQadaCounter(); 
             getUpcomingEvents(); 
             updateNotifyBtn(); 
+            loadDailyChallenge(); // تحميل التحدي
 
             const savedLoc = localStorage.getItem('miqat_location');
             if (savedLoc) {
@@ -1059,15 +1113,21 @@
         }
 
         function initializeLeafletMap(lat, lng) {
-            if (mapInstance) mapInstance.remove(); 
+            if (mapInstance) {
+                mapInstance.remove();
+                mapInstance = null;
+            }
             if(typeof L === 'undefined') {
                 setTimeout(() => initializeLeafletMap(lat, lng), 1000);
                 return;
             }
+            document.getElementById('mapContainer').style.display = 'block';
+
             mapInstance = L.map('mapContainer').setView([lat, lng], 13);
             L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; OpenStreetMap', subdomains: 'abcd', maxZoom: 19
             }).addTo(mapInstance);
+            
             mapMarker = L.marker([lat, lng], {draggable: true}).addTo(mapInstance);
             mapMarker.on('dragend', function(event) {
                 const position = mapMarker.getLatLng();
@@ -1080,7 +1140,11 @@
 
         async function getAddressFromCoords(lat, lng) {
             try {
-                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept_language=ar`);
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept_language=ar`, {
+                    headers: { 'Accept-Language': 'ar' }
+                });
+                if (!response.ok) throw new Error("Network response was not ok");
+                
                 const data = await response.json();
                 let areaName = data.address.city || data.address.town || data.address.state || "موقع محدد";
                 stageLocation(lat, lng, areaName, data.display_name);
@@ -1113,6 +1177,7 @@
             list.innerHTML = '<li class="result-item"><i class="fas fa-spinner fa-spin"></i> جاري البحث...</li>';
             try {
                 const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&accept_language=ar`);
+                if (!response.ok) throw new Error("فشل الاتصال");
                 const data = await response.json();
                 list.innerHTML = '';
                 if(data.length === 0) { list.innerHTML = '<li class="result-item">لم يتم العثور على نتائج</li>'; return; }
@@ -1124,7 +1189,6 @@
                     li.onclick = () => {
                         const lat = parseFloat(place.lat);
                         const lon = parseFloat(place.lon);
-                        document.getElementById('mapContainer').style.display = 'block';
                         document.querySelector('.loc-btn').style.display = 'none';
                         initializeLeafletMap(lat, lon);
                         stageLocation(lat, lon, cityName, place.display_name);
@@ -1151,6 +1215,7 @@
             document.getElementById('citySearchInput').value = '';
             document.querySelector('.loc-btn').style.display = 'flex';
             document.getElementById('mapContainer').style.display = 'none';
+            if(mapInstance) { mapInstance.remove(); mapInstance = null; }
         }
 
         function confirmLocation() {
@@ -1297,6 +1362,10 @@
             const qibla = adhan.Qibla(coords);
             let alpha = e.webkitCompassHeading || e.alpha;
             
+            if (!e.webkitCompassHeading && e.absolute === false) {
+                 document.getElementById('qiblaStatus').innerText = "⚠️ المعايرة غير دقيقة على هذا الجهاز";
+            }
+
             document.getElementById('compassRing').style.transform = `rotate(${-alpha}deg)`;
             
             document.querySelector('.kaaba-icon').style.transform = `translateX(-50%) rotate(${qibla}deg) translate(0, -110px) rotate(${-qibla}deg)`;
@@ -1456,18 +1525,15 @@
         let isAudioPlaying = false; 
 
         function toggleAudio() {
+            if(isRadioPlaying) toggleRadio(); // إيقاف الراديو إذا كان يعمل
+
             const icon = document.getElementById('audioIcon');
             const btnText = document.getElementById('playBtnText');
             const player = document.getElementById('quranAudio');
             const indicator = document.getElementById('playingStatus');
             
             if (!player.paused || isAudioPlaying) {
-                player.pause();
-                player.currentTime = 0;
-                isAudioPlaying = false;
-                icon.className = "fas fa-play";
-                btnText.innerText = "استماع";
-                indicator.style.display = 'none';
+                stopAudio();
                 return;
             }
 
@@ -1497,14 +1563,28 @@
         }
 
         function stopAudio() {
+            // إيقاف القرآن
             const player = document.getElementById('quranAudio');
             const icon = document.getElementById('audioIcon');
             const btnText = document.getElementById('playBtnText');
             const indicator = document.getElementById('playingStatus');
-            player.pause(); isAudioPlaying = false;
+            
+            player.onended = null;
+            player.pause(); 
+            player.currentTime = 0;
+            isAudioPlaying = false;
+            
             if(icon) icon.className = "fas fa-play";
             if(btnText) btnText.innerText = "استماع";
             if(indicator) indicator.style.display = 'none';
+
+            // إيقاف الراديو أيضاً إذا كان يعمل
+            if(isRadioPlaying) {
+                radioAudio.pause();
+                const radioBtn = document.getElementById('radioPlayBtn');
+                if(radioBtn) radioBtn.innerHTML = '<i class="fas fa-play"></i>';
+                isRadioPlaying = false;
+            }
         }
 
         const adhkarData = {
@@ -1538,7 +1618,6 @@
             container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i> <br><span style="font-size:0.8rem">جاري التحميل...</span>';
             
             try {
-                // استخدام القارئ المحدد من الإعدادات
                 const res = await fetch(`https://api.alquran.cloud/v1/ayah/random/${currentReciter}?t=${new Date().getTime()}`);
                 if (!res.ok) throw new Error("فشل الاتصال");
                 const d = await res.json();
@@ -1565,6 +1644,29 @@
             } else { alert("المشاركة غير مدعومة"); }
         }
 
+        // دالة مشاركة الآية كصورة
+        function shareAyahAsImage() {
+            const card = document.querySelector('#quranCard');
+            // نحتاج استثناء الأزرار من الصورة
+            const actionsDiv = document.querySelector('.ayah-actions');
+            actionsDiv.style.opacity = '0';
+            
+            html2canvas(card, {
+                backgroundColor: null,
+                scale: 2 // لزيادة الجودة
+            }).then(canvas => {
+                actionsDiv.style.opacity = '1';
+                
+                const link = document.createElement('a');
+                link.download = `ayah_miqat_${Date.now()}.png`;
+                link.href = canvas.toDataURL();
+                link.click();
+            }).catch(err => {
+                actionsDiv.style.opacity = '1';
+                alert("حدث خطأ أثناء إنشاء الصورة");
+            });
+        }
+
         let tCount = parseInt(localStorage.getItem('tasbihCount')) || 0;
         const ringElem = document.getElementById('tasbihRingElem');
         document.getElementById('tasbihCounter').innerText = tCount;
@@ -1582,7 +1684,9 @@
         let recognition;
         let isListening = false;
         function toggleVoiceTasbih() {
-            if(!('webkitSpeechRecognition' in window)) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+            if(!SpeechRecognition) {
                 alert("الميزة الصوتية غير مدعومة في هذا المتصفح");
                 return;
             }
@@ -1595,7 +1699,7 @@
                 status.innerText = "";
                 return;
             }
-            recognition = new webkitSpeechRecognition();
+            recognition = new SpeechRecognition();
             recognition.lang = 'ar-SA';
             recognition.continuous = true;
             recognition.interimResults = false;
@@ -1607,7 +1711,7 @@
             recognition.onresult = (event) => {
                 const last = event.results.length - 1;
                 const transcript = event.results[last][0].transcript.trim();
-                if(transcript.includes('الله') || transcript.includes('سبحان') || transcript.includes('أكبر')) {
+                if(transcript.includes('الله') || transcript.includes('سبحان') || transcript.includes('أكبر') || transcript.includes('الحمد')) {
                     incrementTasbih();
                     status.innerText = "✨ تم الاحتساب";
                 }
@@ -1620,7 +1724,7 @@
             recognition.start();
         }
 
-        function analyzeMood(mood) {
+        function analyzeMood(mood, element) {
             const moodData = {
                 anxious: { t: "أَلا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ", s: "الرعد: 28", d: "اللهم إني أعوذ بك من الهم والحزن" },
                 sad: { t: "لَا تَحْزَنْ إِنَّ اللَّهَ مَعَنَا", s: "التوبة: 40", d: "يا حي يا قيوم برحمتك أستغيث" },
@@ -1630,7 +1734,7 @@
             const data = moodData[mood];
             const box = document.getElementById('moodRemedy');
             document.querySelectorAll('.mood-item').forEach(i => i.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            element.classList.add('active');
             box.style.display = 'block';
             box.classList.remove('animate__fadeIn');
             void box.offsetWidth; 
@@ -1851,8 +1955,103 @@
             list.innerHTML = html;
         }
 
+        // --- منطق تحدي الخير اليومي ---
+        const challenges = [
+            "تصدق بمبلغ بسيط اليوم ولو عبر تطبيق بنكي 💳",
+            "اتصل بقريب لم تتحدث معه منذ فترة (صلة رحم) 📞",
+            "اقرأ صفحتين من القرآن بعد الصلاة القادمة 📖",
+            "أطعم طائراً أو حيواناً في الشارع 🐦",
+            "استغفر الله 100 مرة الآن 📿",
+            "ابتسم في وجه شخص لا تعرفه وقل السلام عليكم 😊",
+            "أرسل رسالة شكر لشخص أثر في حياتك 💌",
+            "صم يوماً تطوعاً لله تعالى 🥤"
+        ];
+
+        function loadDailyChallenge() {
+            const dayIndex = new Date().getDate() % challenges.length;
+            document.getElementById('dailyChallengeText').innerText = challenges[dayIndex];
+            
+            if(localStorage.getItem(`challenge_done_${new Date().getDate()}`)) {
+                const btn = document.getElementById('challengeBtn');
+                btn.innerText = "تم الإنجاز 🎉";
+                btn.style.opacity = "0.7";
+                btn.disabled = true;
+            }
+        }
+
+        function acceptChallenge() {
+            // تأثير بسيط
+            const btn = document.getElementById('challengeBtn');
+            btn.classList.add('animate__animated', 'animate__rubberBand');
+            localStorage.setItem(`challenge_done_${new Date().getDate()}`, 'true');
+            setTimeout(loadDailyChallenge, 800);
+        }
+
+        // --- منطق الراديو المباشر ---
+        const stations = [
+            { name: "إذاعة القرآن الكريم (القاهرة)", url: "https://n0e.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABjF_2Vtu_4gD8qK8q8q8q8q" },
+            { name: "إذاعة الحرم المكي", url: "https://stream.alquran.cloud/all/makkah" },
+            { name: "إذاعة مشاري العفاسي", url: "https://qurango.net/radio/alafasy" },
+            { name: "تلاوات هادئة (قصيرة)", url: "https://qurango.net/radio/salman_alutaybi" }
+        ];
+        let currentStationIdx = 0;
+        let radioAudio = new Audio();
+        let isRadioPlaying = false;
+
+        function changeStation(dir) {
+            currentStationIdx = (currentStationIdx + dir + stations.length) % stations.length;
+            updateStationUI();
+            if(isRadioPlaying) { 
+                radioAudio.src = stations[currentStationIdx].url; 
+                radioAudio.play().catch(e => console.log(e));
+            }
+        }
+
+        function updateStationUI() {
+            document.getElementById('stationName').innerText = stations[currentStationIdx].name;
+        }
+
+        function toggleRadio() {
+            const btn = document.getElementById('radioPlayBtn');
+            if(isRadioPlaying) {
+                radioAudio.pause();
+                btn.innerHTML = '<i class="fas fa-play"></i>';
+                isRadioPlaying = false;
+            } else {
+                // إيقاف أي صوت آخر (القرآن/المعاينة)
+                stopAudio(); 
+                stopPreview();
+                
+                radioAudio.src = stations[currentStationIdx].url;
+                radioAudio.play().then(() => {
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                    isRadioPlaying = true;
+                }).catch(e => {
+                    alert("تعذر تشغيل البث المباشر حالياً");
+                    console.error(e);
+                });
+            }
+        }
+
+        // --- منطق حصن المسلم السريع ---
+        const hisnData = {
+            worry: "اللهم إني عبدك، ابن عبدك، ابن أمتك، ناصيتي بيدك، ماض في حكمك، عدل في قضاؤك...",
+            debt: "اللهم اكفني بحلالك عن حرامك، وأغنني بفضلك عمن سواك.",
+            travel: "الله أكبر، الله أكبر، الله أكبر، سُبْحانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ...",
+            sick: "أسأل الله العظيم رب العرش العظيم أن يشفيك (7 مرات).",
+            istikhara: "اللهم إني أستخيرك بعلمك، وأستقدرك بقدرتك، وأسألك من فضلك العظيم...",
+            sleep: "اللهم غارت النجوم، وهدأت العيون، وأنت حي قيوم لا تأخذك سنة ولا نوم، يا حي يا قيوم أهدئ ليلي، وأنم عيني."
+        };
+
+        function showHisn(key) {
+            const box = document.getElementById('hisnResult');
+            box.style.display = 'block';
+            box.innerHTML = `<div class="adhkar-text" style="font-size:1rem;">${hisnData[key]}</div>`;
+            box.scrollIntoView({behavior: "smooth"});
+        }
+
         // ==========================================
-        // 9. منطق صفحة الإعدادات (المطور)
+        // 9. منطق صفحة الإعدادات
         // ==========================================
 
         function openSettings() { document.getElementById('settingsModal').style.display = 'flex'; }
@@ -1861,7 +2060,6 @@
             stopPreview(); 
         }
 
-        // تعبئة قائمة القراء
         function populateRecitersList() {
             const select = document.getElementById('settingsReciter');
             const currentVal = localStorage.getItem('miqat_reciter') || 'ar.alafasy';
@@ -1875,7 +2073,6 @@
             });
         }
 
-        // معاينة الأذان
         function previewSelectedAdhan() {
             const select = document.getElementById('settingsAdhan');
             const btn = document.getElementById('btnPreviewAdhan');
@@ -1892,7 +2089,6 @@
             previewAudioObj.onended = () => stopPreview();
         }
 
-        // معاينة القارئ
         async function previewSelectedReciter() {
             const select = document.getElementById('settingsReciter');
             const btn = document.getElementById('btnPreviewReciter');
@@ -1984,4 +2180,4 @@
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
 </body>
-    </html>
+                    </html>
