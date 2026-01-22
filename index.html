@@ -20,7 +20,7 @@
         :root {
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             --card-bg: rgba(30, 41, 59, 0.65); /* تم تعديل الشفافية لتأثير الزجاج */
-            --text-primary: #ffffff;
+            --const statitext-primary: #ffffff;
             --text-secondary: #cbd5e1;
             --accent-color: #ffd700;
             --accent-glow: rgba(255, 215, 0, 0.5);
@@ -969,7 +969,7 @@
         let isAppReady = false;
 
         function checkLibrariesAndHideLoader() {
-            const loader = document.getElementById('legendaryLoader');
+             loader = document.getElementById('legendaryLoader');
             const overlay = document.getElementById('locationOverlay');
             
             let checkInterval = setInterval(() => {
@@ -1029,15 +1029,15 @@
             { id: 'ar.ahmedajamy', name: 'أحمد العجمي' }
         ];
 
-        const adhanSounds = {
-            'makkah': 'https://cdn.islamic.network/adhan/makkah.mp3',
-            'madina': 'https://cdn.islamic.network/adhan/madina.mp3',
-            'alafasy': 'https://cdn.islamic.network/adhan/alafasy.mp3',
-            'alaqsa': 'https://www.islamcan.com/audio/adhan/alaqsa.mp3',
-            'egypt': 'https://www.islamcan.com/audio/adhan/egypt.mp3',
-            'istanbul': 'https://data.al-feqh.com/adhan/Turkey.mp3',
-            'maroc': 'https://data.al-feqh.com/adhan/Morocco.mp3'
-        };
+const adhanSounds = {
+    'makkah': 'https://www.islamcan.com/audio/adhan/makkah.mp3',
+    'madina': 'https://www.islamcan.com/audio/adhan/madina.mp3',
+    'alafasy': 'https://www.islamcan.com/audio/adhan/alafasy.mp3',
+    'alaqsa': 'https://www.islamcan.com/audio/adhan/alaqsa.mp3',
+    'egypt': 'https://www.islamcan.com/audio/adhan/egypt.mp3',
+    'istanbul': 'https://www.islamcan.com/audio/adhan/istanbul.mp3',
+    'maroc': 'https://download.tvquran.com/download/adhan/Maghrib.mp3'
+};
 
         let previewAudioObj = new Audio();
 
@@ -1988,16 +1988,16 @@
         }
 
         // --- منطق الراديو المباشر ---
-        const stations = [
-            { name: "إذاعة القرآن الكريم (القاهرة)", url: "https://n0e.radiojar.com/8s5u5tpdtwzuv?rj-ttl=5&rj-tok=AAABjF_2Vtu_4gD8qK8q8q8q8q" },
-            { name: "إذاعة الحرم المكي", url: "https://stream.alquran.cloud/all/makkah" },
-            { name: "إذاعة مشاري العفاسي", url: "https://qurango.net/radio/alafasy" },
-            { name: "تلاوات هادئة (قصيرة)", url: "https://qurango.net/radio/salman_alutaybi" }
-        ];
+        
         let currentStationIdx = 0;
         let radioAudio = new Audio();
         let isRadioPlaying = false;
-
+const stations = [
+    { name: "إذاعة القرآن الكريم (القاهرة)", url: "https://stream.radiojar.com/8s5u5tpdtwzuv" },
+    { name: "إذاعة الحرم المكي", url: "https://stream.alquran.cloud/all/makkah" },
+    { name: "إذاعة مشاري العفاسي", url: "https://qurango.net/radio/alafasy" },
+    { name: "تلاوات هادئة (مختارة)", url: "https://qurango.net/radio/mix" }
+];
         function changeStation(dir) {
             currentStationIdx = (currentStationIdx + dir + stations.length) % stations.length;
             updateStationUI();
@@ -2180,4 +2180,4 @@
         setInterval(updateSmartAdhkar, 3600000); 
     </script>
 </body>
-                    </html>
+    </html>
