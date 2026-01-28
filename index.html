@@ -104,9 +104,6 @@
             border: 2px solid var(--accent-color); display: none; z-index: 1;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
-<button class="btn-small" onclick="findNearbyMosques()" style="width:100%; margin-top:5px; background: #10b981; color:white; border:none;">
-    <i class="fas fa-mosque"></i> أظهر المساجد القريبة
-</button>
         .leaflet-popup-content-wrapper { background: #1e293b; color: #fff; border: 1px solid var(--accent-color); }
         .leaflet-popup-tip { background: #1e293b; border: 1px solid var(--accent-color); }
         
@@ -2019,61 +2016,6 @@ function setSleepTimer(minutes) {
                 updateKhatmaUI(data.s, data.a);
             }
         }
-async function findNearbyMosques() {
-    if (!coords || !mapInstance) {
-        alert("يجب تحديد الموقع وتفعيل الخريطة أولاً");
-        return;
-    }
-    
-    // إظهار الخريطة إذا كانت مخفية
-    document.getElementById('mapContainer').style.display = 'block';
-    
-    // استخدام Overpass API لجلب المساجد (Amenity: Place of worship, Religion: Muslim)
-    const query = `
-        [out:json];
-        (
-          node["amenity"="place_of_worship"]["religion"="muslim"](around:2000, ${coords.latitude}, ${coords.longitude});
-          way["amenity"="place_of_worship"]["religion"="muslim"](around:2000, ${coords.latitude}, ${coords.longitude});
-        );
-        out center;
-    `;
-    
-    const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-    
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if(data.elements.length === 0) {
-            alert("لم يتم العثور على مساجد في دائرة 2 كم");
-            return;
-        }
-
-        // إضافة دبابيس للمساجد
-        data.elements.forEach(element => {
-            const lat = element.lat || element.center.lat;
-            const lon = element.lon || element.center.lon;
-            const name = element.tags.name || "مسجد";
-            
-            L.marker([lat, lon], {
-                icon: L.divIcon({
-                    className: 'custom-div-icon',
-                    html: `<i class="fas fa-mosque" style="color:#10b981; font-size:20px; text-shadow:0 0 5px black;"></i>`,
-                    iconSize: [30, 42],
-                    iconAnchor: [15, 42]
-                })
-            })
-            .addTo(mapInstance)
-            .bindPopup(`<b>${name}</b><br><a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lon}" target="_blank">ذهاب للمسجد</a>`);
-        });
-        
-        alert(`تم العثور على ${data.elements.length} مسجد قريب`);
-        
-    } catch(e) {
-        alert("حدث خطأ أثناء البحث عن المساجد");
-        console.error(e);
-    }
-}
 
         function updateKhatmaUI(surah, ayah) {
             const percent = (surah / 114) * 100;
@@ -2536,171 +2478,136 @@ function toggleRamadanSim() {
 // checkRamadanStatus();
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
         
+                // ==========================================
+        // 10. إعداد أسماء الله الحسنى (شريط متحرك)
+        // ==========================================
         const names99 = [
-            "الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر", "الخالق", "البارئ", "المصور", "الغفار", "القهار", "الوهاب", "الرزاق", "الفتاح", "العليم", "القابض", "الباسط", "الخافض", "الرافع", "المعز", "المذل", "السميع", "البصير", "الحكيم", "العدل", "اللطيف", "الخبير", "الحليم", "العظيم", "الغفور", "الشكور", "العلي", "الكبير", "الحفيظ", "المقيت", "الحسيب", "الجليل", "الكريم", "الرقيب", "المجيب", "الواسع", "الحكيم", "الودود", "المجيد", "الباعث", "الشهيد", "الوكيل", "القوي", "المتين", "الولي", "الولي", "الحميد", "المحصي", "المبدئ", "المعيد", "المحيي", "المميت", "الحي", "القيوم", "الواجد", "الماجد", "الواحد", "الأحد", "الصمد", "القادر", "المقتدر", "المقدم", "المؤخر", "الأول", "الآخر", "الظاهر", "الباطن", "الوالي", "المتعالي", "البر", "التواب", "المنتقم", "العفو", "الرؤوف", "مالك الملك", "ذو الجلال والإكرام", "المقسط", "الجامع", "الغني", "المغني", "المانع", "الضار", "النافع", "النور", "الهادي", "البديع", "الباقي", "الوارث", "الرشيد", "الصبور"
+            "الله", "الرحمن", "الرحيم", "الملك", "القدوس", "السلام", "المؤمن", "المهيمن", "العزيز", "الجبار", "المتكبر", "الخالق", "البارئ", "المصور", "الغفار", "القهار", "الوهاب", "الرزاق", "الفتاح", "العليم", "القابض", "الباسط", "الخافض", "الرافع", "المعز", "المذل", "السميع", "البصير", "الحكيم", "العدل", "اللطيف", "الخبير", "الحليم", "العظيم", "الغفور", "الشكور", "العلي", "الكبير", "الحفيظ", "المقيت", "الواجد", "الماجد", "الواحد", "الأحد", "الصمد", "القادر", "المقتدر", "المقدم", "المؤخر", "الأول", "الآخر", "الظاهر", "الباطن", "الوالي", "المتعالي", "البر", "التواب", "المنتقم", "العفو", "الرؤوف", "مالك الملك", "ذو الجلال والإكرام", "المقسط", "الجامع", "الغني", "المغني", "المانع", "الضار", "النافع", "النور", "الهادي", "البديع", "الباقي", "الوارث", "الرشيد", "الصبور"
         ];
         
-        const marqueeHTML = names99.map(n => `<span class="god-name">${n}</span>`).join('✦') + names99.map(n => `<span class="god-name">${n}</span>`).join('✦');
+        const marqueeHTML = names99.map(n => `<span class="god-name">${n}</span>`).join('✦ ') + '✦ ' + names99.map(n => `<span class="god-name">${n}</span>`).join('✦ ');
         document.getElementById('asmaaMarquee').innerHTML = marqueeHTML;
 
-        initApp();
-        setInterval(updateSmartAdhkar, 3600000); 
-function initDynamicSky() {
-    // تحديث السماء فوراً ثم كل دقيقة
-    updateSkyGradient();
-    setInterval(updateSkyGradient, 60000);
-}
+        // ==========================================
+        // 11. نظام السماء الديناميكية (Dynamic Sky)
+        // ==========================================
+        function initDynamicSky() {
+            updateSkyGradient();
+            setInterval(updateSkyGradient, 60000); // تحديث الخلفية كل دقيقة
+        }
 
-function updateSkyGradient() {
-    if(!coords) return; // لا نعمل بدون موقع
-    
-    const now = new Date();
-    // حساب المواقيت الحالية
-    let params = adhan.CalculationMethod[calculationMethod] ? adhan.CalculationMethod[calculationMethod]() : adhan.CalculationMethod.MuslimWorldLeague();
-    const times = new adhan.PrayerTimes(coords, now, params);
-    
-    const nowTime = now.getTime();
-    const sunrise = times.sunrise.getTime();
-    const sunset = times.maghrib.getTime();
-    const noon = times.dhuhr.getTime();
+        function updateSkyGradient() {
+            if(!coords) return; // لا نعمل حتى يتم تحديد الموقع
+            
+            const now = new Date();
+            const nowTime = now.getTime();
+            
+            // حساب المواقيت الحالية
+            let params = adhan.CalculationMethod[calculationMethod] ? adhan.CalculationMethod[calculationMethod]() : adhan.CalculationMethod.MuslimWorldLeague();
+            const times = new adhan.PrayerTimes(coords, now, params);
+            
+            const sunrise = times.sunrise.getTime();
+            const sunset = times.maghrib.getTime(); 
+            
+            // متغيرات لتعديل ألوان النصوص حسب الخلفية
+            const root = document.documentElement;
+            
+            let gradient = "";
+            let textColor = "#ffffff";
+            let cardBg = "rgba(30, 41, 59, 0.65)";
+            let textSecondary = "#cbd5e1";
 
-    let gradient = "";
+            // المنطق الزمني للخلفية
+            if (nowTime < sunrise - 3600000) { 
+                // ليل عميق (قبل الشروق بساعة)
+                gradient = "linear-gradient(135deg, #0f172a 0%, #000000 100%)"; 
+            } else if (nowTime < sunrise) {
+                // الفجر (أزرق غامق إلى برتقالي خفيف)
+                gradient = "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)";
+            } else if (nowTime < sunrise + 4500000) { // ساعة وربع بعد الشروق
+                // الشروق الذهبي
+                gradient = "linear-gradient(135deg, #f59e0b 0%, #60a5fa 100%)";
+                textColor = "#000000"; // نص داكن للخلفية الفاتحة
+                cardBg = "rgba(255, 255, 255, 0.75)";
+                textSecondary = "#334155";
+            } else if (nowTime < sunset - 3600000) {
+                // النهار (سماوي صافي)
+                gradient = "linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%)";
+                textColor = "#000000"; 
+                cardBg = "rgba(255, 255, 255, 0.85)";
+                textSecondary = "#1e293b";
+            } else if (nowTime < sunset) {
+                // الغروب (برتقالي محمر)
+                gradient = "linear-gradient(135deg, #f97316 0%, #be185d 100%)";
+                textColor = "#ffffff";
+                cardBg = "rgba(30, 41, 59, 0.65)";
+                textSecondary = "#cbd5e1";
+            } else {
+                // الليل (كحلي)
+                gradient = "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)";
+            }
 
-    // منطق التدرج اللوني
-    if (nowTime < times.fajr.getTime()) {
-        // ليل عميق (قبل الفجر)
-        gradient = "linear-gradient(135deg, #020024 0%, #090979 100%)";
-    } else if (nowTime < sunrise) {
-        // وقت الفجر (أزرق غامق يتفتح)
-        gradient = "linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)";
-    } else if (nowTime < sunrise + 3600000) {
-        // الشروق الذهبي
-        gradient = "linear-gradient(135deg, #FF512F 0%, #F09819 100%)";
-    } else if (nowTime < sunset - 3600000) {
-        // النهار (سماوي صافي)
-        gradient = "linear-gradient(135deg, #2980B9 0%, #6DD5FA 100%)";
-        document.body.classList.add('sun-mode'); // لتغيير النصوص للأسود
-    } else if (nowTime < sunset + 1800000) {
-        // الغروب (برتقالي محمر)
-        gradient = "linear-gradient(135deg, #f12711 0%, #f5af19 100%)";
-        document.body.classList.remove('sun-mode');
-    } else {
-        // الليل (بنفسجي غامق)
-        gradient = "linear-gradient(135deg, #2b1055 0%, #7597de 100%)";
-    }
+            // تطبيق التغييرات عبر CSS Variables للحفاظ على الانتقال السلس
+            root.style.setProperty('--bg-gradient', gradient);
+            
+            // تطبيق ألوان النصوص فقط إذا تغير الوضع (نهار/ليل) لتجنب الوميض
+            // نستخدم متغيرات CSS للتحكم العام
+            if(textColor === "#000000") {
+                document.body.classList.add('sun-mode');
+                document.body.classList.remove('night-mode');
+            } else {
+                document.body.classList.add('night-mode');
+                document.body.classList.remove('sun-mode');
+            }
+        }
 
-    // تطبيق الخلفية بنعومة
-    document.body.style.background = gradient;
-}
+        // ==========================================
+        // 12. تفعيل التطبيق النهائي
+        // ==========================================
+        
+        // تشغيل الجزيئات المتحركة في الخلفية
+        if(typeof particlesJS !== 'undefined') {
+            particlesJS("particles-js", { 
+                "particles": { 
+                    "number": { "value": 30 }, 
+                    "color": { "value": "#ffffff" }, 
+                    "opacity": { "value": 0.3 }, 
+                    "size": { "value": 2 }, 
+                    "move": { "enable": true, "speed": 0.5 } 
+                } 
+            });
+        }
 
-function updateSkyGradient() {
-    if(!coords) return;
-    const now = new Date();
-    
-    // حساب المواقيت لهذا اليوم
-    let params = adhan.CalculationMethod[calculationMethod] ? adhan.CalculationMethod[calculationMethod]() : adhan.CalculationMethod.MuslimWorldLeague();
-    const times = new adhan.PrayerTimes(coords, now, params);
-    // مصفوفة لتخزين الكائنات الصوتية
-const soundMixer = {
-    quran: document.getElementById('quranAudio'),
-    rain: document.getElementById('mix_rain'),
-    night: document.getElementById('mix_night')
-};
-
-function toggleMixerSound(type) {
-    const audio = soundMixer[type];
-    const btn = document.getElementById(`btn-mix-${type}`);
-    
-    // إعداد خاص للقرآن (تلاوة هادئة للخلفية)
-    if(type === 'quran' && !audio.src.includes('recitations')) {
-         // رابط تلاوة هادئة طويلة (هزاع البلوشي مثلاً)
-         audio.src = "https://server11.mp3quran.net/hazza/002.mp3"; 
-    }
-
-    if (audio.paused) {
-        audio.loop = true; // تكرار الصوت
-        audio.play();
-        btn.classList.add('active');
-        btn.innerText = "إيقاف";
-    } else {
-        audio.pause();
-        btn.classList.remove('active');
-        btn.innerText = "تشغيل";
-    }
-}
-
-function updateMixerVol(type, value) {
-    if(soundMixer[type]) {
-        soundMixer[type].volume = value / 100;
-    }
-}
-
-// مؤقت النوم (Sleep Timer)
-function setSleepTimer(minutes) {
-    const display = document.getElementById('sleepTimerDisplay');
-    if(minutes === 0) {
-        display.innerText = "";
-        return;
-    }
-    display.innerText = `سيتم الإيقاف بعد ${minutes} دقيقة 🌙`;
-    
-    setTimeout(() => {
-        // إيقاف جميع الأصوات تدريجياً
-        Object.values(soundMixer).forEach(audio => {
-            if(!audio.paused) {
-                let vol = audio.volume;
-                let fade = setInterval(() => {
-                    if(vol > 0.05) { vol -= 0.05; audio.volume = vol; }
-                    else { clearInterval(fade); audio.pause(); }
-                }, 200);
+        // بدء التطبيق
+        window.addEventListener('load', () => {
+            initApp();
+            
+            // تشغيل التحديثات الدورية
+            setInterval(updateSmartAdhkar, 3600000); // تحديث الذكر كل ساعة
+            
+            // التحقق من تفعيل وضع رمضان
+            if(typeof checkRamadanStatus === 'function') {
+                checkRamadanStatus();
+            }
+            
+            // تفعيل السماء الديناميكية
+            initDynamicSky();
+            
+            // محاولة استعادة إعدادات الوضع الصوتي للراديو إذا كانت محفوظة
+            const savedStation = localStorage.getItem('miqat_last_station');
+            if(savedStation && typeof currentStationIdx !== 'undefined') {
+                currentStationIdx = parseInt(savedStation);
+                updateStationUI();
             }
         });
-        // تصفير الأزرار
-        document.querySelectorAll('.toggle-mix-btn').forEach(b => {
-            b.classList.remove('active'); 
-            b.innerText = b.id.includes('quran') ? "تشغيل" : b.innerText;
-        });
-        display.innerText = "تصبح على خير 💤";
-    }, minutes * 60000);
-}
-    // تحديد "النسبة المئوية" لتقدم اليوم
-    const sunrise = times.sunrise.getTime();
-    const sunset = times.maghrib.getTime(); // نعتبر المغرب هو الغروب
-    const nowTime = now.getTime();
-    
-    let gradient = "";
-    
-    if (nowTime < sunrise - 3600000) { 
-        // ليل عميق
-        gradient = "linear-gradient(135deg, #0f172a 0%, #000000 100%)"; 
-    } else if (nowTime < sunrise) {
-        // الفجر (أزرق غامق إلى برتقالي خفيف)
-        gradient = "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)";
-    } else if (nowTime < sunrise + 3600000) {
-        // ساعة الشروق الذهبية
-        gradient = "linear-gradient(135deg, #f59e0b 0%, #3b82f6 100%)";
-    } else if (nowTime < sunset - 3600000) {
-        // النهار (سماوي)
-        gradient = "linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%)";
-        document.body.style.color = "#000"; // تغيير النص للأسود في النهار
-    } else if (nowTime < sunset) {
-        // ساعة الغروب (برتقالي وأحمر)
-        gradient = "linear-gradient(135deg, #f97316 0%, #7c2d12 100%)";
-    } else {
-        // الليل
-        gradient = "linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)";
-    }
-    
-    // تطبيق التدرج بنعومة
-    document.body.style.background = gradient;
-}
-// ملاحظة: لا تنس استدعاء initDynamicSky() داخل دالة initApp()
-    </script>
-</body>
-</html>).innerHTML = marqueeHTML;
 
-        initApp();
-        setInterval(updateSmartAdhkar, 3600000); 
+        // حفظ محطة الراديو عند التغيير
+        const originalChangeStation = changeStation;
+        changeStation = function(dir) {
+            originalChangeStation(dir);
+            localStorage.setItem('miqat_last_station', currentStationIdx);
+        };
+
     </script>
 </body>
 </html>
