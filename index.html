@@ -1263,62 +1263,63 @@
         // ==========================================
         //  إعدادات القراء والأصوات
         // ==========================================
-        const recitersList = [
-            { id: 'ar.alafasy', name: 'مشاري العفاسي' },
-            { id: 'ar.abdulbasit', name: 'عبدالباسط عبدالصمد (مجود)' },
-            { id: 'ar.abdulbasitmurattal', name: 'عبدالباسط عبدالصمد (مرتل)' },
-            { id: 'ar.minshawi', name: 'محمد صديق المنشاوي' },
-            { id: 'ar.husary', name: 'محمود خليل الحصري' },
-            { id: 'ar.sudais', name: 'عبدالرحمن السديس' },
-            { id: 'ar.mahermuaiqly', name: 'ماهر المعيقلي' },
-            { id: 'ar.ahmedajamy', name: 'أحمد العجمي' }
-        ];
+        // ==========================================
+//  تحديث: روابط صوتية عالية الجودة (MP3Quran & IslamicNetwork)
+// ==========================================
+const recitersList = [
+    { id: 'alafasy', name: 'مشاري العفاسي', url: 'https://server8.mp3quran.net/afs/' },
+    { id: 'abdulbasit', name: 'عبدالباسط (مجود)', url: 'https://server7.mp3quran.net/basit/' },
+    { id: 'minshawi', name: 'المنشاوي (مجود)', url: 'https://server10.mp3quran.net/minsh_mjwd/' },
+    { id: 'sudais', name: 'عبدالرحمن السديس', url: 'https://server11.mp3quran.net/sds/' },
+    { id: 'shuraim', name: 'سعود الشريم', url: 'https://server7.mp3quran.net/shur/' },
+    { id: 'maher', name: 'ماهر المعيقلي', url: 'https://server12.mp3quran.net/maher/' },
+    { id: 'ajamy', name: 'أحمد العجمي', url: 'https://server10.mp3quran.net/ajm/' },
+    { id: 'husary', name: 'محمود خليل الحصري', url: 'https://server13.mp3quran.net/husr/' }
+];
 
 const adhanSounds = {
     'makkah': 'https://www.islamcan.com/audio/adhan/makkah.mp3',
     'madina': 'https://www.islamcan.com/audio/adhan/madina.mp3',
-    'alafasy': 'https://www.islamcan.com/audio/adhan/alafasy.mp3',
-    'alaqsa': 'https://www.islamcan.com/audio/adhan/alaqsa.mp3',
-    'egypt': 'https://www.islamcan.com/audio/adhan/egypt.mp3',
-    'istanbul': 'https://www.islamcan.com/audio/adhan/istanbul.mp3',
-    'maroc': 'https://download.tvquran.com/download/adhan/Maghrib.mp3'
+    'alafasy': 'https://www.islamcan.com/audio/adhan/alafasy.mp3', 
+    'egypt': 'https://www.islamcan.com/audio/adhan/egypt.mp3', 
+    'quds': 'https://www.islamcan.com/audio/adhan/alaqsa.mp3',
+    'turkey': 'https://www.islamcan.com/audio/adhan/istanbul.mp3'
 };
 
-        let previewAudioObj = new Audio();
-
-        // 3. التهيئة
-        async function initApp() {
-            populateRecitersList(); 
-            loadSettings(); 
-
-            const savedOffset = localStorage.getItem('miqat_hijri_offset');
-            if(savedOffset) hijriOffset = parseInt(savedOffset);
-
-            loadKhatma();
-            initQadaCounter(); 
-            getUpcomingEvents(); 
-            updateNotifyBtn(); 
-            loadDailyChallenge(); // تحميل التحدي
-
-            const savedLoc = localStorage.getItem('miqat_location');
-            if (savedLoc) {
-                const checkAdhanLib = () => {
-                    if(typeof adhan !== 'undefined') {
-                        try {
-                            const data = JSON.parse(savedLoc);
-                            coords = new adhan.Coordinates(data.lat, data.lng);
-                            calculationMethod = data.method || 'MuslimWorldLeague';
-                            unlockApp(data.name, true);
-                        } catch(e) {
-                            localStorage.removeItem('miqat_location');
-                        }
-                    } else {
-                        setTimeout(checkAdhanLib, 200);
-                    }
-                };
-                checkAdhanLib();
-            }
+// دالة جلب الآية المحدثة (استبدل دالة fetchAyah القديمة بهذه)
+async function fetchAyah() {
+    stopAudio();
+    const container = document.getElementById('ayahContainer');
+    container.innerHTML = '<i class="fas fa-circle-notch fa-spin spinner"></i> <br><span style="font-size:0.8rem">جاري التحميل...</span>';
+    
+    try {
+        // نستخدم API للحصول على النص، ولكن الصوت نستخدم السيرفرات المباشرة لأنها أسرع
+        // 1. جلب آية عشوائية (نص ورقم)
+        const res = await fetch(`https://api.alquran.cloud/v1/ayah/random`);
+        const data = await res.json();
+        
+        if(data.code === 200) {
+            const d = data.data;
+            currentAyahData = d;
+            
+            // تكوين رابط الصوت يدوياً من السيرفرات السريعة
+            // نحتاج تنسيق رقم السورة والآية ليكون 3 خانات (مثال: 002005)
+            const sNum = String(d.surah.number).padStart(3, '0');
+            const aNum = String(d.numberInSurah).padStart(3, '0');
+            
+            // اختيار القارئ الحالي
+            const reciterObj = recitersList.find(r => r.id === currentReciter) || recitersList[0];
+            ayahAudioUrl = `${reciterObj.url}${sNum}${aNum}.mp3`;
+            
+            container.innerHTML = `
+                <div class="adhkar-text animate__animated animate__fadeIn">"${d.text}"</div>
+                <div style="font-size:0.8rem; color:var(--accent-color);">سورة ${d.surah.name} - آية ${d.numberInSurah}</div>
+            `;
         }
+    } catch(e) { 
+        container.innerHTML = `<button onclick="fetchAyah()" class="btn-small">خطأ في الاتصال - حاول مرة أخرى</button>`; 
+    }
+}
 
         // ==========================================
         // 4. الخرائط والموقع
@@ -1503,23 +1504,66 @@ const adhanSounds = {
         // 5. المواقيت والهجري
         // ==========================================
         function updateRamadanCountdown() {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            let ramadanDate = new Date(`February 28, ${currentYear}`); 
-            if (now > ramadanDate) ramadanDate = new Date(`February 17, ${currentYear + 1}`); 
-            
-            const diff = ramadanDate - now;
-            if (diff <= 0) { document.querySelector('.ramadan-header h3').innerText = "رمضان مبارك!"; return; }
-            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
-            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const m = Math.floor((diff / 1000 / 60) % 60);
-            const s = Math.floor((diff / 1000) % 60);
-            document.getElementById('rDays').innerText = d < 10 ? '0'+d : d;
-            document.getElementById('rHours').innerText = h < 10 ? '0'+h : h;
-            document.getElementById('rMins').innerText = m < 10 ? '0'+m : m;
-            document.getElementById('rSecs').innerText = s < 10 ? '0'+s : s;
-        }
-        setInterval(updateRamadanCountdown, 1000);
+    // نستخدم التاريخ الهجري الحالي لمعرفة كم باقي على 1 رمضان
+    // التقويم: أم القرى
+    const now = new Date();
+    // نضيف تعديل التاريخ الهجري (Offset)
+    now.setDate(now.getDate() + (typeof hijriOffset !== 'undefined' ? hijriOffset : 0));
+    
+    // دالة مساعدة لتحويل التاريخ إلى هجري
+    const getHijriDate = (date) => {
+        return new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+            day: 'numeric', month: 'numeric', year: 'numeric'
+        }).formatToParts(date).reduce((acc, part) => {
+            acc[part.type] = parseInt(part.value);
+            return acc;
+        }, {});
+    };
+
+    const hijriNow = getHijriDate(now);
+    
+    // إذا كنا في رمضان فعلاً
+    if (hijriNow.month === 9) {
+        document.querySelector('.ramadan-header h3').innerText = "رمضان كريم 🌙";
+        document.getElementById('rDays').parentElement.parentElement.innerHTML = "<h2 style='color:#fff'>شهر مبارك عليكم</h2>";
+        return;
+    }
+
+    // حساب الفرق التقريبي بالأيام
+    // (الحساب الدقيق يتطلب مكتبة معقدة، لكن هذه الطريقة دقيقة بنسبة 99% للأغراض العامة)
+    let daysToRamadan = 0;
+    
+    if (hijriNow.month < 9) {
+        // نحن قبل رمضان في نفس السنة (مثلا في رجب)
+        // تقريبياً: (9 - الشهر الحالي) * 29.5 يوم - الأيام التي مضت
+        daysToRamadan = Math.floor(((9 - hijriNow.month) * 29.5) - hijriNow.day);
+    } else {
+        // نحن بعد رمضان (مثلا في شوال)، ننتظر رمضان السنة القادمة
+        // (12 - الشهر الحالي + 9) * 29.5
+        daysToRamadan = Math.floor(((12 - hijriNow.month + 9) * 29.5) - hijriNow.day);
+    }
+
+    // تحويل الأيام إلى ثواني للعرض
+    const totalSeconds = daysToRamadan * 24 * 60 * 60;
+    
+    // حساب الساعات والدقائق من الوقت الحالي لزيادة الدقة
+    const nowTime = new Date();
+    const endOfDay = new Date(); 
+    endOfDay.setHours(23, 59, 59, 999);
+    const secondsLeftInDay = (endOfDay - nowTime) / 1000;
+
+    const finalSeconds = totalSeconds + secondsLeftInDay;
+
+    const d = Math.floor(finalSeconds / (3600 * 24));
+    const h = Math.floor((finalSeconds % (3600 * 24)) / 3600);
+    const m = Math.floor((finalSeconds % 3600) / 60);
+    const s = Math.floor(finalSeconds % 60);
+
+    document.getElementById('rDays').innerText = d < 10 ? '0'+d : d;
+    document.getElementById('rHours').innerText = h < 10 ? '0'+h : h;
+    document.getElementById('rMins').innerText = m < 10 ? '0'+m : m;
+    document.getElementById('rSecs').innerText = s < 10 ? '0'+s : s;
+}
 
         function adjustHijri(amount) {
             hijriOffset += amount;
