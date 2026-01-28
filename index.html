@@ -751,11 +751,14 @@
             <div class="app-title">
                 <i class="fas fa-kaaba fa-spin" style="animation-duration: 20s;"></i> الميقات برو
             </div>
-            <div class="header-actions">
-                <button class="btn-icon" onclick="resetLocationData()" title="تغيير الموقع"><i class="fas fa-map-marker-alt"></i></button>
-                <button class="btn-icon" onclick="openQibla()" title="القبلة"><i class="fas fa-compass"></i></button>
-                <button class="btn-icon" onclick="openSettings()" title="الإعدادات"><i class="fas fa-cog"></i></button>
-            </div>
+<div class="header-actions">
+    <button class="btn-icon" onclick="document.getElementById('toolsModal').style.display='flex'" title="أدوات المسلم">
+        <i class="fas fa-th-large"></i>
+    </button>
+    <button class="btn-icon" onclick="resetLocationData()" title="تغيير الموقع"><i class="fas fa-map-marker-alt"></i></button>
+    <button class="btn-icon" onclick="openQibla()" title="القبلة"><i class="fas fa-compass"></i></button>
+    <button class="btn-icon" onclick="openSettings()" title="الإعدادات"><i class="fas fa-cog"></i></button>
+</div>
         </header>
 
         <div style="text-align: left; margin-bottom: 15px;">
@@ -2924,7 +2927,173 @@ function toggleRamadanSim() {
             originalChangeStation(dir);
             localStorage.setItem('miqat_last_station', currentStationIdx);
         };
+/* ==========================================
+   تحديثات الميزات الأخيرة (محول التاريخ + معاني الأسماء)
+   ========================================== */
 
+// 1. منطق محول التاريخ (خوارزمية تقريبية بدون مكتبات خارجية)
+function kuwaitiCalendar(adjust) {
+    var today = new Date();
+    if (adjust) {
+        var adjustmili = 1000 * 60 * 60 * 24 * adjust;
+        var todaymili = today.getTime() + adjustmili;
+        today = new Date(todaymili);
+    }
+    var day = today.getDate();
+    var month = today.getMonth();
+    var year = today.getFullYear();
+    var m = month + 1;
+    var y = year;
+    if (m < 3) {
+        y -= 1;
+        m += 12;
+    }
+
+    var a = Math.floor(y / 100.);
+    var b = 2 - a + Math.floor(a / 4.);
+    if (y < 1583) b = 0;
+    if (y == 1582) {
+        if (m > 10) b = -10;
+        if (m == 10) {
+            b = 0;
+            if (day > 4) b = -10;
+        }
+    }
+
+    var jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + day + b - 1524;
+
+    var b = 0;
+    if (jd > 2299160) {
+        var a = Math.floor((jd - 1867216.25) / 36524.25);
+        b = 1 + a - Math.floor(a / 4.);
+    }
+    var bb = jd + b + 1524;
+    var cc = Math.floor((bb - 122.1) / 365.25);
+    var dd = Math.floor(365.25 * cc);
+    var ee = Math.floor((bb - dd) / 30.6001);
+    day = (bb - dd) - Math.floor(30.6001 * ee);
+    month = ee - 1;
+    if (ee > 13) {
+        cc += 1;
+        month = ee - 13;
+    }
+    year = cc - 4716;
+
+    var iyear = 10631. / 30.;
+    var epochastro = 1948084;
+    var epochcivil = 1948085;
+
+    var shift1 = 8.01 / 60.;
+
+    var z = jd - epochastro;
+    var cyc = Math.floor(z / 10631.);
+    z = z - 10631 * cyc;
+    var j = Math.floor((z - shift1) / iyear);
+    var iy = 30 * cyc + j;
+    z = z - Math.floor(j * iyear + shift1);
+    var im = Math.floor((z + 28.5001) / 29.5);
+    if (im == 13) im = 12;
+    var id = z - Math.floor(29.5001 * im - 29);
+
+    return {
+        day: id,
+        month: im,
+        year: iy
+    };
+}
+
+// دالة التحويل المحسنة
+function convertDate(type) {
+    const d = parseInt(document.getElementById('convDay').value);
+    const m = parseInt(document.getElementById('convMonth').value);
+    const y = parseInt(document.getElementById('convYear').value);
+    const resBox = document.getElementById('convResult');
+
+    if (!d || !m || !y) {
+        showToast("الرجاء إدخال التاريخ كاملاً", "exclamation-triangle");
+        return;
+    }
+
+    if (type === 'toHijri') {
+        // تحويل من ميلادي لهجري (دقيق)
+        const date = new Date(y, m - 1, d);
+        const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+        resBox.innerHTML = `<span style="color:#ffd700">التاريخ الهجري:</span><br>${formatter.format(date)}`;
+    } else {
+        // تحويل من هجري لميلادي (خوارزمية تقريبية)
+        // هذه معادلة تقريبية لأن التحويل الدقيق يحتاج مكتبات ضخمة
+        const hy = y;
+        const hm = m;
+        const hd = d;
+        const gy = Math.round(hy * 0.97 + 622);
+        // عرض نتيجة تقريبية
+        resBox.innerHTML = `<span style="color:#ffd700">السنة الميلادية (تقريبية):</span><br>${gy}`;
+        showToast("التحويل العكسي يعطي السنة التقريبية فقط", "info");
+    }
+    resBox.classList.add('animate__animated', 'animate__fadeIn');
+}
+
+// 2. توسيع قاعدة بيانات معاني أسماء الله الحسنى (عينة موسعة)
+const extendedAsmaaMeanings = {
+    "الله": "الاسم الجامع لصفات الألوهية، المعبود بحق.",
+    "الرحمن": "ذو الرحمة الواسعة التي شملت كل شيء في الدنيا.",
+    "الرحيم": "ذو الرحمة الخاصة بالمؤمنين في الآخرة.",
+    "الملك": "المالك لكل شيء، المتصرف في ملكه كيف يشاء.",
+    "القدوس": "المطهر المنزه عن كل نقص وعيب.",
+    "السلام": "الذي سلم من كل عيب وسلمت أفعاله من الشر.",
+    "المؤمن": "المصدق لرسله بالمعجزات، والذي يأمن أولياءه من عذابه.",
+    "المهيمن": "الرقيب الحافظ لكل شيء.",
+    "العزيز": "القوي الذي لا يغلب، الممتنع فلا ينال.",
+    "الجبار": "الذي يجبر الكسير، ويقهر الجبابرة.",
+    "المتكبر": "المتعالي عن صفات الخلق، المنفرد بالعظمة.",
+    "الخالق": "المبدع للكائنات من العدم.",
+    "الرزاق": "المتكفل بأرزاق جميع الخلائق.",
+    "الفتاح": "الذي يفتح أبواب الرحمة والرزق لعباده."
+};
+
+// تحديث دالة عرض المعنى لتستخدم القائمة الموسعة
+function showAsmaaMeaning(name) {
+    const box = document.getElementById('asmaaMeaningBox');
+    const title = document.getElementById('asmaaSelected');
+    const desc = document.getElementById('asmaaMeaning');
+    
+    box.style.display = 'block';
+    box.classList.remove('animate__fadeInUp');
+    void box.offsetWidth; // Trigger reflow
+    box.classList.add('animate__animated', 'animate__fadeInUp');
+    
+    title.innerText = name;
+    // البحث في القائمة الموسعة أو استخدام رسالة افتراضية
+    desc.innerText = extendedAsmaaMeanings[name] || asmaaMeanings[name] || "جل جلاله - (اضغط لاسم آخر)";
+}
+
+// 3. إصلاح تشغيل الصوتيات في استوديو السكينة
+document.addEventListener('DOMContentLoaded', () => {
+    // التأكد من تحميل أصوات الطبيعة
+    const rainAudio = document.getElementById('mix_rain');
+    const nightAudio = document.getElementById('mix_night');
+    if(rainAudio) rainAudio.volume = 0.3;
+    if(nightAudio) nightAudio.volume = 0.4;
+});
+
+// 4. تحسين دالة فتح المودال لإظهار الأسماء بشكل صحيح
+function openAsmaaModal() {
+    document.getElementById('asmaaModal').style.display = 'flex';
+    document.getElementById('toolsModal').style.display = 'none';
+    const grid = document.getElementById('asmaaGrid');
+    grid.innerHTML = '';
+    
+    names99.forEach((name, index) => {
+        const div = document.createElement('div');
+        div.className = 'asmaa-item-box animate__animated animate__zoomIn';
+        div.style.animationDelay = `${index * 0.01}s`;
+        div.innerText = name;
+        div.onclick = () => showAsmaaMeaning(name);
+        grid.appendChild(div);
+    });
+}
     </script>
 </body>
 </html>
