@@ -16,23 +16,22 @@
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
     <style>
-        /* المتغيرات الأساسية */
+        /* === المتغيرات الأساسية === */
         :root {
             --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --card-bg: rgba(30, 41, 59, 0.65);
-            /* تصحيح الخطأ هنا: إزالة const وتسمية المتغير بشكل صحيح */
+            --card-bg: rgba(30, 41, 59, 0.75); /* زيادة الشفافية قليلاً */
             --text-primary: #ffffff;
             --text-secondary: #cbd5e1;
             --accent-color: #ffd700;
-            --accent-glow: rgba(255, 215, 0, 0.5);
+            --accent-glow: rgba(255, 215, 0, 0.6);
             --border-color: rgba(255, 255, 255, 0.15);
-            --icon-bg: rgba(255, 255, 255, 0.1);
+            --icon-bg: rgba(255, 255, 255, 0.08);
         }
 
         body.fajr-mode { --bg-gradient: linear-gradient(135deg, #1a2980, #26d0ce); } 
-        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.85); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
+        body.sun-mode { --bg-gradient: linear-gradient(135deg, #f7971e, #ffd200); --text-primary: #000; --card-bg: rgba(255,255,255,0.9); --text-secondary: #333; --border-color: rgba(0,0,0,0.1); } 
         body.maghrib-mode { --bg-gradient: linear-gradient(135deg, #2c3e50, #fd746c); } 
-        body.night-mode { --bg-gradient: linear-gradient(135deg, #0f172a 0%, #000000 100%); } 
+        body.night-mode { --bg-gradient: linear-gradient(135deg, #020024 0%, #090979 35%, #00d4ff 100%); } 
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Tajawal', sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
         
@@ -43,11 +42,67 @@
         body { 
             min-height: 100vh; 
             background: var(--bg-gradient); 
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite; /* أنيميشن للخلفية */
             color: var(--text-primary); 
             overflow-x: hidden; 
             transition: background 1.5s ease, color 1.5s ease; 
             padding-bottom: 90px; 
         }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* === تحسينات الأنيميشن الخرافية === */
+        
+        /* 1. تأثير الطفو للعناصر */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .lantern-decoration, .kaaba-icon, .moon-icon {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        /* 2. تأثير التوهج النابض */
+        @keyframes glowingBorder {
+            0% { box-shadow: 0 0 5px var(--accent-glow); border-color: rgba(255,215,0,0.3); }
+            50% { box-shadow: 0 0 20px var(--accent-glow), 0 0 10px var(--accent-color); border-color: var(--accent-color); }
+            100% { box-shadow: 0 0 5px var(--accent-glow); border-color: rgba(255,215,0,0.3); }
+        }
+
+        /* 3. تأثير الكروت التفاعلي */
+        .card { 
+            background: var(--card-bg); 
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid var(--border-color); 
+            border-radius: 28px; 
+            padding: 25px 20px; 
+            margin-bottom: 20px; 
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
+            position: relative; 
+            overflow: hidden; 
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* حركة مرنة */
+            transform-style: preserve-3d;
+        }
+
+        .card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: var(--accent-color);
+        }
+        
+        .card::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: 0.5s; pointer-events: none;
+        }
+        .card:hover::before { left: 100%; }
 
         /* شاشة التحميل */
         #legendaryLoader {
@@ -167,17 +222,6 @@
         }
         .btn-icon:active { transform: scale(0.92); }
 
-        /* === تحسين Glassmorphism للكروت === */
-        .card { 
-            background: var(--card-bg); 
-            backdrop-filter: blur(20px) saturate(180%);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--border-color); border-radius: 28px; 
-            padding: 25px 20px; margin-bottom: 20px; 
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.15);
-            position: relative; overflow: hidden; transition: transform 0.3s ease;
-        }
-
         .ramadan-card {
             background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(0, 0, 0, 0.4) 100%);
             border: 1px solid rgba(255, 215, 0, 0.3); text-align: center; position: relative;
@@ -237,6 +281,7 @@
             background: var(--accent-color); color: #000; 
             transform: translateY(-5px); box-shadow: 0 10px 25px var(--accent-glow); 
             border: none; font-weight: bold;
+            animation: pulse-gold 2s infinite;
         }
 
         /* --- تحسينات القبلة --- */
@@ -315,7 +360,7 @@
         .god-name { display: inline-block; margin: 0 25px; font-family: 'Amiri'; color: var(--accent-color); font-size: 1.1rem; }
         @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(100%); } }
 
-        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.2; pointer-events: none; }
+        #particles-js { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.4; pointer-events: none; }
         .spinner { font-size: 2rem; color: var(--accent-color); animation: fa-spin 2s linear infinite; }
         
         .btn-small {
@@ -511,7 +556,7 @@
         .preview-btn.playing { background: #ef4444; color: white; animation: pulse 1s infinite; }
 /* --- تنسيقات وضع رمضان الخاص --- */
 .ramadan-dashboard {
-    display: none; /* مخفي افتراضياً */
+    display: none; 
     background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 100%);
     border: 2px solid #fbbf24;
     border-radius: 20px;
@@ -519,7 +564,7 @@
     margin-bottom: 20px;
     position: relative;
     overflow: hidden;
-    animation: fadeInDown 1s;
+    animation: glowingBorder 3s infinite; /* تأثير التوهج */
 }
 
 .ramadan-active .ramadan-dashboard { display: block; }
@@ -629,9 +674,14 @@
 .timer-chips span:hover { background: rgba(255,255,255,0.2); }
         .hisn-btn { background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #ccc; padding: 10px 5px; border-radius: 10px; cursor: pointer; transition: 0.2s; font-size: 0.8rem; }
         .hisn-btn:hover { background: var(--accent-color); color: #000; }
+        
+        /* Fireworks Canvas */
+        #fireworksCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9000; display: none; }
     </style>
 </head>
 <body class="night-mode">
+
+    <canvas id="fireworksCanvas"></canvas>
 
     <div id="legendaryLoader">
         <div class="loader-content">
@@ -642,14 +692,14 @@
             <div class="loader-bar-container">
                 <div class="loader-bar"></div>
             </div>
-            <p class="loader-text" id="loaderText">جاري تهيئة أدق المواقيت...</p>
+            <p class="loader-text" id="loaderText">جاري تهيئة تجربة روحانية متكاملة...</p>
         </div>
     </div>
 
     <div id="particles-js"></div>
 
     <div class="location-overlay" id="locationOverlay">
-        <i class="fas fa-map-marked-alt" style="font-size: 4rem; color: var(--accent-color); margin-bottom: 20px;"></i>
+        <i class="fas fa-map-marked-alt animate__animated animate__bounceIn" style="font-size: 4rem; color: var(--accent-color); margin-bottom: 20px;"></i>
         <h2 style="color:white; margin-bottom:10px;">إعداد الموقع</h2>
         
         <div id="searchSection" style="width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center;">
@@ -747,7 +797,7 @@
     </div>
 </div>
 
-<button class="sim-btn" onclick="toggleRamadanSim()">🌙 تجربة وضع رمضان</button>
+<button class="sim-btn" onclick="toggleRamadanSim()">🌙 تجربة وضع رمضان (مدفع الإفطار)</button>
         <header class="header">
             <div class="app-title">
                 <i class="fas fa-kaaba fa-spin" style="animation-duration: 20s;"></i> الميقات برو
@@ -770,7 +820,7 @@
 
         <div class="card" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.8) 0%, rgba(55, 48, 163, 0.8) 100%); border:none;">
             <div style="text-align:center;">
-                <i class="fas fa-trophy" style="font-size:2rem; color:#ffd700; margin-bottom:10px;"></i>
+                <i class="fas fa-trophy animate__animated animate__tada animate__infinite" style="font-size:2rem; color:#ffd700; margin-bottom:10px; animation-duration: 3s;"></i>
                 <h3 style="color:#fff; margin-bottom:5px;">تحدي الخير اليومي</h3>
                 <p id="dailyChallengeText" style="color:#e0e7ff; font-size:1rem; margin: 10px 0; font-weight:bold;">...</p>
                 <button onclick="acceptChallenge()" id="challengeBtn" class="btn-small" style="background:#fff; color:#4f46e5; border:none; font-weight:bold;">قبلت التحدي ✅</button>
@@ -778,7 +828,7 @@
         </div>
 
         <div class="card ramadan-card animate__animated animate__flipInX">
-            <i class="fas fa-mosque lantern-deco" style="position:absolute; top:-10px; left:20px; font-size:3rem; opacity:0.1;"></i>
+            <i class="fas fa-mosque lantern-deco lantern-decoration" style="position:absolute; top:-10px; left:20px; font-size:3rem; opacity:0.1;"></i>
             <div class="ramadan-header">
                 <i class="fas fa-moon"></i>
                 <h3 style="margin:0;">باقي على شهر رمضان</h3>
@@ -1202,6 +1252,7 @@
 
     <audio id="quranAudio" preload="auto"></audio>
     <audio id="adhanAudio" src="https://cdn.islamic.network/adhan/makkah.mp3" preload="auto"></audio>
+    <audio id="iftarCannonSound" src="https://www.soundjay.com/mechanical/sounds/explosion-01.mp3" preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js"></script>
@@ -1258,7 +1309,8 @@
         let chartInstance = null;
         let currentAyahData = null; 
         const previewAudioObj = new Audio(); // تم إصلاح المتغير المفقود
-        
+        let iftarAdhanPlayed = false; // متغير لتتبع حالة مدفع الإفطار
+
         // متغيرات الإعدادات
         let currentReciter = 'ar.alafasy';
         let currentThemeColor = '#ffd700';
@@ -1266,9 +1318,6 @@
         // ==========================================
         //  إعدادات القراء والأصوات
         // ==========================================
-        // ==========================================
-//  تحديث: روابط صوتية عالية الجودة (MP3Quran & IslamicNetwork)
-// ==========================================
 const recitersList = [
     { id: 'ar.alafasy', name: 'مشاري العفاسي', url: 'https://everyayah.com/data/Alafasy_128kbps/' },
     { id: 'ar.abdulbasit', name: 'عبدالباسط (مجود)', url: 'https://everyayah.com/data/Abdul_Basit_Mujawwad_128kbps/' },
@@ -1284,14 +1333,14 @@ const adhanSounds = {
     'madina': 'https://media.aladhan.com/audio/adhans/madina.mp3',
     'alafasy': 'https://media.aladhan.com/audio/adhans/alafasy.mp3', 
     'egypt': 'https://media.aladhan.com/audio/adhans/egypt.mp3', 
-    'alaqsa': 'https://media.aladhan.com/audio/adhans/aqsa.mp3', // تم تصحيح المفتاح ليتطابق مع HTML
+    'alaqsa': 'https://media.aladhan.com/audio/adhans/aqsa.mp3', 
     'istanbul': 'https://media.aladhan.com/audio/adhans/turkey.mp3',
-    'maroc': 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Adhan_f%C3%A8s.mp3' // رابط إضافي للمغرب
+    'maroc': 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Adhan_f%C3%A8s.mp3'
 };
 
-// ==========================================
-// 4. الخرائط والموقع
-// ==========================================
+        // ==========================================
+        // 4. الخرائط والموقع
+        // ==========================================
         async function initMapWithGPS() {
             const mapDiv = document.getElementById('mapContainer');
             const btn = document.querySelector('.loc-btn');
@@ -1458,7 +1507,7 @@ const adhanSounds = {
                 updateSmartAdhkar();
                 fetchAyah();
                 initChart();
-                updateRamadanCountdown(); // تشغيل عداد رمضان
+                updateRamadanCountdown(); 
             } catch (e) { console.error("خطأ التحديث:", e); }
         }
 
@@ -1473,13 +1522,9 @@ const adhanSounds = {
         // 5. المواقيت والهجري
         // ==========================================
         function updateRamadanCountdown() {
-            // نستخدم التاريخ الهجري الحالي لمعرفة كم باقي على 1 رمضان
-            // التقويم: أم القرى
             const now = new Date();
-            // نضيف تعديل التاريخ الهجري (Offset)
             now.setDate(now.getDate() + (typeof hijriOffset !== 'undefined' ? hijriOffset : 0));
             
-            // دالة مساعدة لتحويل التاريخ إلى هجري
             const getHijriDate = (date) => {
                 return new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
                     day: 'numeric', month: 'numeric', year: 'numeric'
@@ -1491,26 +1536,20 @@ const adhanSounds = {
 
             const hijriNow = getHijriDate(now);
             
-            // إذا كنا في رمضان فعلاً
             if (hijriNow.month === 9) {
                 document.querySelector('.ramadan-header h3').innerText = "رمضان كريم 🌙";
                 document.getElementById('rDays').parentElement.parentElement.innerHTML = "<h2 style='color:#fff'>شهر مبارك عليكم</h2>";
                 return;
             }
 
-            // حساب الفرق التقريبي بالأيام
             let daysToRamadan = 0;
-            
             if (hijriNow.month < 9) {
                 daysToRamadan = Math.floor(((9 - hijriNow.month) * 29.5) - hijriNow.day);
             } else {
                 daysToRamadan = Math.floor(((12 - hijriNow.month + 9) * 29.5) - hijriNow.day);
             }
 
-            // تحويل الأيام إلى ثواني للعرض
             const totalSeconds = daysToRamadan * 24 * 60 * 60;
-            
-            // حساب الساعات والدقائق من الوقت الحالي لزيادة الدقة
             const nowTime = new Date();
             const endOfDay = new Date(); 
             endOfDay.setHours(23, 59, 59, 999);
@@ -1607,10 +1646,7 @@ const adhanSounds = {
             document.getElementById('qiblaModal').style.display = 'none';
             window.removeEventListener('deviceorientation', handleOrientation);
         }
-        /* ==========================================
-   13. الميزات الجديدة (الإشعارات، الأذكار، المحول)
-   ========================================== */
-
+        
 // --- إضافة زر الأدوات للهيدر برمجياً ---
 window.addEventListener('load', () => {
     const headerActions = document.querySelector('.header-actions');
@@ -1716,7 +1752,6 @@ function openConverter() {
 
 
 // --- 4. أسماء الله الحسنى (مع المعاني) ---
-// عينة من البيانات
 const asmaaMeanings = {
     "الله": "الاسم الأعظم الذي تفرد به الحق سبحانه وخص به نفسه.",
     "الرحمن": "ذو الرحمة الشاملة لجميع الخلائق في الدنيا.",
@@ -1733,20 +1768,17 @@ function drawQiblaLine() {
     const kaabaCoords = [21.422487, 39.826206];
     const userCoords = [coords.latitude, coords.longitude];
     
-    // إزالة الخطوط القديمة
     mapInstance.eachLayer((layer) => {
         if(layer instanceof L.Polyline) mapInstance.removeLayer(layer);
     });
 
-    // رسم خط متقطع
     const polyline = L.polyline([userCoords, kaabaCoords], {
-        color: 'var(--accent-color)', // استخدام لون الثيم الذهبي
+        color: 'var(--accent-color)', 
         weight: 4,
         opacity: 0.8,
-        dashArray: '10, 10' // خط متقطع
+        dashArray: '10, 10' 
     }).addTo(mapInstance);
     
-    // إضافة ماركر للكعبة
     const kaabaIcon = L.divIcon({
         html: '<i class="fas fa-kaaba" style="font-size:24px; color:black; text-shadow:0 0 5px gold;"></i>',
         className: 'dummy-icon',
@@ -1754,7 +1786,6 @@ function drawQiblaLine() {
     });
     L.marker(kaabaCoords, {icon: kaabaIcon}).addTo(mapInstance).bindPopup("الكعبة المشرفة");
     
-    // ضبط الزوم ليشمل النقطتين
     mapInstance.fitBounds(polyline.getBounds(), {padding: [50, 50]});
 }
         let lastVibration = 0;
@@ -1861,13 +1892,16 @@ function drawQiblaLine() {
                 currentPTime = times.isha;
             }
 
-            pList.forEach(p => {
+            pList.forEach((p, index) => {
                 const isNext = (nextP && p.n === nextP.n) || (nextP.n.includes('غداً') && p.n === 'الفجر');
                 const isExtra = (p.n === 'الشروق' || p.n === 'الضحى');
                 const style = isExtra ? 'opacity:0.7; border: 1px dashed var(--border-color);' : '';
                 
+                // تأثير الدخول المتتابع (Staggered Entrance)
+                const animationStyle = `animation: fadeInUp 0.5s ease forwards; animation-delay: ${index * 0.1}s; opacity: 0;`;
+
                 html += `
-                <div class="prayer-card ${isNext ? 'active' : ''}" style="${style}">
+                <div class="prayer-card ${isNext ? 'active' : ''}" style="${style} ${animationStyle}">
                     <div style="font-size:0.8rem; opacity:0.8">${p.n}</div>
                     <div style="font-weight:bold; font-family:'Arial'">${p.t.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',hour12:false, numberingSystem: 'latn'})}</div>
                 </div>`;
@@ -1905,8 +1939,11 @@ function drawQiblaLine() {
                     sendNotification(`حان وقت صلاة ${name}`, "الصلاة خير من النوم، حي على الصلاة.");
 
                     if(!adhanHasPlayed && diff > -60000 && name !== 'الشروق' && name !== 'الضحى') { 
-                        document.getElementById('adhanAudio').play().catch(e => console.log(e)); 
-                        adhanHasPlayed = true; 
+                        // تشغيل الأذان (إلا في حالة رمضان والمغرب، يتم التعامل معه في وظيفة رمضان)
+                        if(!(isRamadanMode && name === 'المغرب')) {
+                             document.getElementById('adhanAudio').play().catch(e => console.log(e)); 
+                             adhanHasPlayed = true; 
+                        }
                     }
                     setTimeout(updatePrayerUI, 3000);
                     clearInterval(timerInterval);
@@ -2667,14 +2704,12 @@ const stations = [
             }
         }
 // ==========================================
-// منطق رمضان المتقدم
+// منطق رمضان المتقدم (الإفطار والصوت)
 // ==========================================
 let isRamadanMode = false;
 let taraweehRakahs = 0;
 
 function checkRamadanStatus() {
-    // نحصل على التاريخ الهجري الحالي
-    // ملاحظة: يعتمد على hijriOffset الموجود في كودك الأصلي
     const date = new Date();
     date.setDate(date.getDate() + (typeof hijriOffset !== 'undefined' ? hijriOffset : 0));
     
@@ -2684,7 +2719,6 @@ function checkRamadanStatus() {
     
     const islamicMonth = parseInt(formatter.format(date));
     
-    // شهر 9 هو رمضان
     if (islamicMonth === 9 || isRamadanMode) {
         activateRamadanFeatures();
     } else {
@@ -2697,8 +2731,7 @@ function activateRamadanFeatures() {
     const dashboard = document.getElementById('ramadanDashboard');
     dashboard.style.display = 'block';
     
-    // إخفاء بطاقة العد التنازلي العادية لأننا سنستخدم عداد الإفطار
-    document.querySelector('.timer-container').parentElement.style.display = 'none'; // إخفاء الكارد العادي مؤقتاً
+    document.querySelector('.timer-container').parentElement.style.display = 'none'; 
     
     updateRamadanTimer();
 }
@@ -2719,21 +2752,19 @@ function updateRamadanTimer() {
     
     let targetTime, labelText;
     
-    // إذا كنا قبل المغرب (وقت الصيام)
     if (date < maghrib) {
         targetTime = maghrib;
         labelText = "⏳ متبقي على الإفطار";
         document.getElementById('maghribTimeDisplay').innerText = maghrib.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12:false});
     } else {
-        // إذا كنا بعد المغرب (وقت الإفطار) حتى الفجر
         targetTime = fajrNext;
         labelText = "🥣 متبقي على الإمساك (الفجر)";
         document.getElementById('maghribTimeDisplay').innerHTML = `<i class="fas fa-sun"></i> الفجر: ${fajrNext.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12:false})}`;
+        iftarAdhanPlayed = false; // إعادة التعيين لليوم التالي
     }
     
     document.getElementById('iftarTypeLabel').innerText = labelText;
     
-    // حساب الوقت المتبقي
     const diff = targetTime - date;
     
     if (diff > 0) {
@@ -2743,12 +2774,34 @@ function updateRamadanTimer() {
         document.getElementById('iftarCounter').innerText = `${h<10?'0'+h:h}:${m<10?'0'+m:m}:${s<10?'0'+s:s}`;
     } else {
         document.getElementById('iftarCounter').innerText = "00:00:00";
+        
+        // --- منطق صوت الإفطار الأسطوري ---
+        if (!iftarAdhanPlayed && date < maghrib.getTime() + 60000) { 
+            triggerIftarCelebration();
+            iftarAdhanPlayed = true;
+        }
     }
     
-    // تحديث كل ثانية إذا كنا في وضع رمضان
     if(document.body.classList.contains('ramadan-active')) {
         setTimeout(updateRamadanTimer, 1000);
     }
+}
+
+function triggerIftarCelebration() {
+    // 1. تشغيل صوت المدفع
+    const cannon = document.getElementById('iftarCannonSound');
+    cannon.volume = 1.0;
+    cannon.play().catch(e => console.log("الصوت يحتاج تفاعل المستخدم"));
+
+    // 2. إطلاق الألعاب النارية
+    launchFireworks();
+
+    // 3. تشغيل الأذان بعد المدفع بـ 3 ثواني
+    setTimeout(() => {
+        const adhanPlayer = document.getElementById('adhanAudio');
+        adhanPlayer.play().catch(e => console.log(e));
+        showToast("🌙 حان موعد الإفطار، تقبل الله صيامكم", "moon");
+    }, 3000);
 }
 
 function updateTaraweeh(amount) {
@@ -2758,15 +2811,75 @@ function updateTaraweeh(amount) {
     localStorage.setItem('ramadan_taraweeh', taraweehRakahs);
 }
 
-// زر المحاكاة (لأغراض التجربة فقط)
 function toggleRamadanSim() {
     isRamadanMode = !isRamadanMode;
     if(isRamadanMode) {
         alert("تم تفعيل وضع رمضان التجريبي 🌙");
         checkRamadanStatus();
+        
+        // محاكاة الإفطار بعد 5 ثواني
+        setTimeout(() => {
+             triggerIftarCelebration();
+        }, 5000);
+        showToast("سيتم تشغيل محاكاة الإفطار خلال 5 ثواني...", "stopwatch");
+        
     } else {
-        location.reload(); // إعادة تحميل لإلغاء الوضع
+        location.reload(); 
     }
+}
+
+// === منطق الألعاب النارية البسيط (Canvas Fireworks) ===
+function launchFireworks() {
+    const canvas = document.getElementById('fireworksCanvas');
+    canvas.style.display = 'block';
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    let particles = [];
+    
+    function createParticle(x, y) {
+        const count = 30;
+        for (let i = 0; i < count; i++) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                life: 100,
+                color: `hsl(${Math.random() * 360}, 100%, 50%)`
+            });
+        }
+    }
+    
+    // إطلاق عدة ألعاب نارية
+    for(let i=0; i<5; i++) {
+        setTimeout(() => {
+            createParticle(Math.random() * canvas.width, Math.random() * canvas.height / 2);
+        }, i * 500);
+    }
+
+    function animateFireworks() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        for (let i = 0; i < particles.length; i++) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life--;
+            p.vy += 0.1; // gravity
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        particles = particles.filter(p => p.life > 0);
+        
+        if (particles.length > 0) {
+            requestAnimationFrame(animateFireworks);
+        } else {
+            canvas.style.display = 'none';
+        }
+    }
+    animateFireworks();
 }
 
         particlesJS("particles-js", { "particles": { "number": { "value": 30 }, "color": { "value": "#ffffff" }, "opacity": { "value": 0.3 }, "size": { "value": 2 }, "move": { "enable": true, "speed": 0.5 } } });
@@ -2981,4 +3094,4 @@ function toggleRamadanSim() {
 
     </script>
 </body>
-    </html>
+                            </html>
