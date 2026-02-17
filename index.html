@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
+    <meta name="theme-color" content="#ffd700">
     <link rel="icon" type="image/png" href="https://img.icons8.com/fluency/48/kaaba.png">
     
     <title>الميقات برو | الإصدار الشامل</title>
@@ -276,7 +276,6 @@
             animation: pulse-gold 2s infinite;
         }
 
-        /* --- تحسينات القبلة --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.92); z-index: 2000;
@@ -405,7 +404,7 @@
             background: rgba(255,255,255,0.95); 
             border: 2px solid var(--border-color); 
             padding: 10px; border-radius: 10px; 
-            color: #000000 !important; 
+            color: #000000 !important; /* الكتابة بالأسود بناء على طلبك */
             text-align: center; outline: none; 
             font-weight: bold; font-size: 1.1rem;
         }
@@ -541,9 +540,6 @@
         .preview-btn:active { transform: scale(0.9); }
         .preview-btn.playing { background: #ef4444; color: white; animation: pulse 1s infinite; }
 
-        /* ========================================= */
-        /* 🌟 التحديث الأعظم لرمضان (التاج الرمضاني) 🌟 */
-        /* ========================================= */
         body.ramadan-active .ramadan-card { display: none !important; }
         body.ramadan-active .timer-container { display: none !important; }
 
@@ -919,8 +915,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                 <h3 style="font-size: 0.9rem; color: var(--text-secondary);"><i class="fas fa-clipboard-list"></i> عداد الفوائت (القضاء)</h3>
             </div>
-            <div class="qada-grid" id="qadaContainer">
-                </div>
+            <div class="qada-grid" id="qadaContainer"></div>
         </div>
 
         <div class="card">
@@ -1683,15 +1678,6 @@
         }
         
         window.addEventListener('load', () => {
-            const headerActions = document.querySelector('.header-actions');
-            const toolsBtn = document.createElement('button');
-            toolsBtn.className = 'btn-icon';
-            toolsBtn.innerHTML = '<i class="fas fa-th-large"></i>';
-            toolsBtn.onclick = () => document.getElementById('toolsModal').style.display = 'flex';
-            if(headerActions && !document.querySelector('.fa-th-large').closest('.btn-icon').isEqualNode(headerActions.firstElementChild)) {
-                // Already added in HTML
-            }
-            
             if(mapInstance && coords) {
                 drawQiblaLine();
             }
@@ -1953,6 +1939,10 @@
 
             document.getElementById('nextPrayerName').innerText = name;
             
+            // تحميل الأذان مسبقاً ليعمل في الخلفية
+            const adhanAudio = document.getElementById('adhanAudio');
+            if(adhanAudio) adhanAudio.load();
+            
             if(timerInterval) clearInterval(timerInterval);
             
             timerInterval = setInterval(() => {
@@ -1971,7 +1961,7 @@
 
                     if(!adhanHasPlayed && diff > -60000 && name !== 'الشروق' && name !== 'الضحى') { 
                         if(!(isRamadanMode && name === 'المغرب')) {
-                             document.getElementById('adhanAudio').play().catch(e => console.log(e)); 
+                             if(adhanAudio) adhanAudio.play().catch(e => console.log(e)); 
                              adhanHasPlayed = true; 
                         }
                     }
@@ -2068,6 +2058,7 @@
         let isAudioPlaying = false; 
         let ayahAudioUrl = "";
 
+        // تعديل وظيفة الورد القرآني لتعمل في شاشة القفل والخلفية
         function toggleAudio() {
             if(isRadioPlaying) toggleRadio(); 
 
@@ -2097,7 +2088,22 @@
                 player.onended = () => {
                     indicator.innerText = "جاري تلاوة الآية...";
                     player.src = ayahAudioUrl;
-                    player.play().catch(e => { console.error("خطأ", e); stopAudio(); });
+                    
+                    player.play().then(() => {
+                        const reciterObj = recitersList.find(r => r.id === currentReciter) || recitersList[0];
+                        
+                        // إعدادات شاشة القفل للقرآن
+                        if ('mediaSession' in navigator && currentAyahData) {
+                            navigator.mediaSession.metadata = new MediaMetadata({
+                                title: `سورة ${currentAyahData.surah.name} - آية ${currentAyahData.numberInSurah}`,
+                                artist: reciterObj.name,
+                                album: 'الميقات برو - الورد القرآني',
+                                artwork: [{ src: 'https://img.icons8.com/fluency/192/quran.png', sizes: '192x192', type: 'image/png' }]
+                            });
+                            navigator.mediaSession.setActionHandler('play', function() { player.play(); icon.className = "fas fa-stop"; btnText.innerText = "إيقاف"; });
+                            navigator.mediaSession.setActionHandler('pause', function() { player.pause(); icon.className = "fas fa-play"; btnText.innerText = "استماع"; });
+                        }
+                    }).catch(e => { console.error("خطأ", e); stopAudio(); });
 
                     player.onended = () => {
                         stopAudio();
@@ -2556,6 +2562,7 @@
             document.getElementById('stationName').innerText = stations[currentStationIdx].name;
         }
 
+        // تعديل الراديو ليعمل في شاشة القفل والخلفية
         function toggleRadio() {
             const btn = document.getElementById('radioPlayBtn');
             if(isRadioPlaying) {
@@ -2570,6 +2577,24 @@
                 radioAudio.play().then(() => {
                     btn.innerHTML = '<i class="fas fa-pause"></i>';
                     isRadioPlaying = true;
+                    
+                    // إعدادات شاشة القفل للراديو
+                    if ('mediaSession' in navigator) {
+                        navigator.mediaSession.metadata = new MediaMetadata({
+                            title: stations[currentStationIdx].name,
+                            artist: 'الميقات برو',
+                            album: 'إذاعة القرآن الكريم',
+                            artwork: [
+                                { src: 'https://img.icons8.com/fluency/192/kaaba.png', sizes: '192x192', type: 'image/png' },
+                                { src: 'https://img.icons8.com/fluency/512/kaaba.png', sizes: '512x512', type: 'image/png' }
+                            ]
+                        });
+
+                        navigator.mediaSession.setActionHandler('play', function() { radioAudio.play(); btn.innerHTML = '<i class="fas fa-pause"></i>'; isRadioPlaying = true; });
+                        navigator.mediaSession.setActionHandler('pause', function() { radioAudio.pause(); btn.innerHTML = '<i class="fas fa-play"></i>'; isRadioPlaying = false; });
+                        navigator.mediaSession.setActionHandler('previoustrack', function() { changeStation(-1); });
+                        navigator.mediaSession.setActionHandler('nexttrack', function() { changeStation(1); });
+                    }
                 }).catch(e => {
                     alert("تعذر تشغيل البث المباشر حالياً");
                     console.error(e);
@@ -3119,4 +3144,4 @@
 
     </script>
 </body>
-</html>
+    </html>
