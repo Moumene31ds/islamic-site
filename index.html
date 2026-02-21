@@ -404,7 +404,7 @@
             background: rgba(255,255,255,0.95); 
             border: 2px solid var(--border-color); 
             padding: 10px; border-radius: 10px; 
-            color: #000000 !important; /* الكتابة بالأسود بناء على طلبك */
+            color: #000000 !important; 
             text-align: center; outline: none; 
             font-weight: bold; font-size: 1.1rem;
         }
@@ -1283,7 +1283,7 @@
     </div>
 
     <audio id="quranAudio" preload="auto"></audio>
-    <audio id="adhanAudio" src="https://cdn.islamic.network/adhan/makkah.mp3" preload="auto"></audio>
+    <audio id="adhanAudio" src="https://download.tvquran.com/download/selections/380/601a4cb54d4f8.mp3" preload="auto"></audio>
     <audio id="iftarCannonSound" src="https://www.soundjay.com/mechanical/sounds/explosion-01.mp3" preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
@@ -1297,6 +1297,12 @@
         // ==========================================
         let isAppReady = false;
         let loader;
+        
+        // نقل المتغيرات للأعلى لمنع خطأ TDZ (ReferenceError)
+        let isRamadanMode = false;
+        let taraweehRakahs = 0;
+        let ramadanTimerId = null;
+        let currentPrayerName = '';
 
         function checkLibrariesAndHideLoader() {
             loader = document.getElementById('legendaryLoader');
@@ -1359,13 +1365,15 @@
             { id: 'ar.husary', name: 'محمود خليل الحصري', url: 'https://everyayah.com/data/Husary_128kbps/' }
         ];
 
+        // إصلاح روابط الأذان بصيغة mp3 لتجنب خطأ تشغيل صفحات الـ php
         const adhanSounds = {
-            'makkah': 'https://audio.islamweb.net/audio/index.php?page=audioinfo&audioid=426698',
-            'madina': 'https://audio.islamweb.net/audio/index.php?page=audioinfo&audioid=5',
-            'alafasy': 'https://audio.islamweb.net/audio/index.php?page=audioinfo&audioid=206930', 
-            'egypt': 'https://audio.islamweb.net/audio/index.php?page=audioinfo&audioid=88633', 
-            'alaqsa': 'https://audio.islamweb.net/audio/index.php?page=audioinfo&audioid=7', 
-            'istanbul': 'https://haii3alslah.com/audio/526/haii3alslah1336584.mp3',
+            'makkah': 'https://download.tvquran.com/download/selections/380/601a4cb54d4f8.mp3',
+            'madina': 'https://download.tvquran.com/download/selections/380/601a4cc2c3ec7.mp3',
+            'alafasy': 'https://download.tvquran.com/download/selections/380/601a4cb20739c.mp3',
+            'egypt': 'https://download.tvquran.com/download/selections/380/601a4cb8e67da.mp3',
+            'alaqsa': 'https://download.tvquran.com/download/selections/380/601a4cbad6260.mp3',
+            'istanbul': 'https://download.tvquran.com/download/selections/380/601a4cbc12a3f.mp3',
+            'maroc': 'https://download.tvquran.com/download/selections/380/601a4cbd1b046.mp3'
         };
 
         // ==========================================
@@ -1532,6 +1540,7 @@
             document.getElementById('locationText').innerHTML = `<i class="fas fa-map-marker-alt" style="color:#10b981"></i> ${locationName}`;
 
             try {
+                updateSkyGradient(); 
                 updatePrayerUI();
                 updateHijriDate();
                 updateSmartAdhkar();
@@ -1622,6 +1631,10 @@
             document.getElementById('gregorianDisplay').innerText = gregDate.toLocaleDateString('ar-EG', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', numberingSystem: 'latn' 
             });
+            
+            // تحديث مؤشر رمضان بمجرد تعديل التاريخ
+            updateRamadanCountdown();
+            checkRamadanStatus();
         }
 
         function updateMoonPhase(day) {
@@ -1932,6 +1945,12 @@
         }
 
         function startTimer(startTime, endTime, name) {
+            // إعادة ضبط حالة الأذان إذا تغير وقت الصلاة
+            if (currentPrayerName !== name) {
+                currentPrayerName = name;
+                adhanHasPlayed = false;
+            }
+
             const timerEl = document.getElementById('nextPrayerTimer');
             const ringEl = document.getElementById('progressRing');
             const totalDuration = endTime - startTime;
@@ -1988,7 +2007,8 @@
                 audio = document.getElementById('quranAudio'); 
                 if(audio.paused) {
                     stopAudio(); 
-                    audio.src = "https://download.tvquran.com/download/recitations/random/1.mp3"; 
+                    // إصلاح رابط القرآن المكسور واستبداله ببث إذاعي للترتيل ليعمل باستمرار
+                    audio.src = "https://qurango.net/radio/tarteel"; 
                     audio.loop = true;
                     audio.play();
                     btn.classList.add('active');
@@ -2058,7 +2078,6 @@
         let isAudioPlaying = false; 
         let ayahAudioUrl = "";
 
-        // تعديل وظيفة الورد القرآني لتعمل في شاشة القفل والخلفية
         function toggleAudio() {
             if(isRadioPlaying) toggleRadio(); 
 
@@ -2092,7 +2111,6 @@
                     player.play().then(() => {
                         const reciterObj = recitersList.find(r => r.id === currentReciter) || recitersList[0];
                         
-                        // إعدادات شاشة القفل للقرآن
                         if ('mediaSession' in navigator && currentAyahData) {
                             navigator.mediaSession.metadata = new MediaMetadata({
                                 title: `سورة ${currentAyahData.surah.name} - آية ${currentAyahData.numberInSurah}`,
@@ -2159,6 +2177,7 @@
             else if (h >= 12 && h < 17) { currentAdhkarList = adhkarData.general; tag.innerText = "✨ ذكر وموعظة"; tag.style.background = "#10b981"; } 
             else if (h >= 17 && h < 21) { currentAdhkarList = adhkarData.evening; tag.innerText = "🌙 أذكار المساء"; tag.style.background = "#f97316"; } 
             else { currentAdhkarList = adhkarData.night; tag.innerText = "💤 أذكار النوم"; tag.style.background = "#6366f1"; }
+            currentAdhkarIndex = 0;
             document.getElementById('adhkarText').innerText = currentAdhkarList[0];
         }
 
@@ -2562,7 +2581,6 @@
             document.getElementById('stationName').innerText = stations[currentStationIdx].name;
         }
 
-        // تعديل الراديو ليعمل في شاشة القفل والخلفية
         function toggleRadio() {
             const btn = document.getElementById('radioPlayBtn');
             if(isRadioPlaying) {
@@ -2578,7 +2596,6 @@
                     btn.innerHTML = '<i class="fas fa-pause"></i>';
                     isRadioPlaying = true;
                     
-                    // إعدادات شاشة القفل للراديو
                     if ('mediaSession' in navigator) {
                         navigator.mediaSession.metadata = new MediaMetadata({
                             title: stations[currentStationIdx].name,
@@ -2734,8 +2751,6 @@
         // ==========================================
         // منطق رمضان المتقدم (الإفطار والصوت) - التحديث الأعظم
         // ==========================================
-        let isRamadanMode = true; // مفعل دائماً للتجربة
-        let taraweehRakahs = 0;
 
         function checkRamadanStatus() {
             const date = new Date();
@@ -2747,7 +2762,6 @@
             
             const islamicMonth = parseInt(formatter.format(date));
             
-            // تحديث رقم اليوم في رمضان
             const dayFormatter = new Intl.DateTimeFormat('ar-SA-u-ca-islamic', { day: 'numeric', month: 'long', numberingSystem: 'latn' });
             document.getElementById('ramadanHijriDate').innerText = dayFormatter.format(date);
 
@@ -2755,6 +2769,7 @@
                 activateRamadanFeatures();
             } else {
                 document.body.classList.remove('ramadan-active');
+                if (ramadanTimerId) clearTimeout(ramadanTimerId);
             }
         }
 
@@ -2780,28 +2795,23 @@
             
             let targetTime, labelText;
             
-            // تحديث الأوقات في الواجهة
             const fajrElem = document.getElementById('fajrTimeDisplay');
             const maghribElem = document.getElementById('maghribTimeDisplay');
             if(fajrElem) fajrElem.innerHTML = `<i class="fas fa-moon"></i> الفجر: ${fajr.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12:false, numberingSystem: 'latn'})}`;
             if(maghribElem) maghribElem.innerHTML = `<i class="fas fa-sun"></i> المغرب: ${maghrib.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit', hour12:false, numberingSystem: 'latn'})}`;
             
-            // منطق شريط التقدم للصيام
             const progressBar = document.getElementById('fastingProgressBar');
             const percentText = document.getElementById('percentFasting');
 
             if (date < fajr) {
-                // قبل الفجر
                 targetTime = fajr;
                 labelText = "🥣 متبقي على الإمساك";
                 if(progressBar) progressBar.style.width = "0%";
                 if(percentText) percentText.innerText = "في انتظار الصيام";
             } else if (date < maghrib) {
-                // أثناء الصيام
                 targetTime = maghrib;
                 labelText = "⏳ متبقي على الإفطار";
                 
-                // حساب نسبة الصيام بدقة
                 const totalFastingMs = maghrib.getTime() - fajr.getTime();
                 const passedFastingMs = date.getTime() - fajr.getTime();
                 let percent = (passedFastingMs / totalFastingMs) * 100;
@@ -2811,22 +2821,21 @@
                 if(progressBar) {
                     progressBar.style.width = `${percent}%`;
                     if(maghrib.getTime() - date.getTime() < 3600000) {
-                        progressBar.style.background = "linear-gradient(90deg, #10b981, #34d399)"; // أخضر
+                        progressBar.style.background = "linear-gradient(90deg, #10b981, #34d399)";
                         progressBar.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.8)";
                     } else {
-                        progressBar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)"; // ذهبي
+                        progressBar.style.background = "linear-gradient(90deg, #f59e0b, #fbbf24)";
                         progressBar.style.boxShadow = "0 0 15px rgba(251, 191, 36, 0.8)";
                     }
                 }
                 if(percentText) percentText.innerText = `${percent.toFixed(1)}%`;
                 
             } else {
-                // بعد المغرب
                 targetTime = fajrNext;
                 labelText = "🥣 متبقي على فجر الغد";
                 if(progressBar) progressBar.style.width = "100%";
                 if(percentText) percentText.innerText = "تقبل الله صيامكم";
-                iftarAdhanPlayed = false; // إعادة التعيين لليوم التالي
+                iftarAdhanPlayed = false; 
             }
             
             const labelElem = document.getElementById('iftarTypeLabel');
@@ -2843,7 +2852,6 @@
             } else {
                 if(counterElem) counterElem.innerText = "00:00:00";
                 
-                // --- التجربة السينمائية للإفطار ---
                 if (!iftarAdhanPlayed && date < maghrib.getTime() + 60000) { 
                     triggerEpicIftar();
                     iftarAdhanPlayed = true;
@@ -2851,7 +2859,8 @@
             }
             
             if(document.body.classList.contains('ramadan-active')) {
-                setTimeout(updateRamadanTimer, 1000);
+                if (ramadanTimerId) clearTimeout(ramadanTimerId);
+                ramadanTimerId = setTimeout(updateRamadanTimer, 1000);
             }
         }
 
@@ -2915,7 +2924,8 @@
                 }, 5000);
                 showToast("سيتم تشغيل محاكاة الإفطار خلال 5 ثواني...", "stopwatch");
             } else {
-                location.reload(); 
+                checkRamadanStatus();
+                showToast("تم إيقاف وضع رمضان التجريبي", "info-circle");
             }
         }
 
@@ -3092,6 +3102,9 @@
             loadKhatma();
             loadDailyChallenge();
             getUpcomingEvents();
+
+            const savedHijriOffset = localStorage.getItem('miqat_hijri_offset');
+            if (savedHijriOffset) hijriOffset = parseInt(savedHijriOffset);
 
             const savedLoc = localStorage.getItem('miqat_location');
             if(savedLoc) {
